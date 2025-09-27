@@ -1,18 +1,84 @@
-# build an executable named myprog from myprog.c
-# the compiler: gcc for C program, define as g++ for C++
-CC = g++
+# ==============================================================================
+# 1. Configuration Variables
+# ==============================================================================
 
-# compiler flags:
-#  -g    adds debugging information to the executable file
-#  -Wall turns on most, but not all, compiler warnings
-CFLAGS  = -g -Wall
+# Executable name
+TARGET = BpProgram
 
-# the build target executable:
-TARGET = matrixprog
+# Directories
+SRC_DIR = .
+BIN_DIR = bin
+OBJ_DIR = obj
 
-$(TARGET): main.cpp
-	$(CC) $(CFLAGS) -o $(TARGET) -std=c++11 main.cpp matrix.cpp png.cpp matrix_calculate.cpp network.cpp bp_func.cpp dataset.cpp -lpng
-	./$(TARGET)
+# Compiler and Flags
+CXX = g++
+CXXFLAGS = -std=c++11 -Wall -g # -g for debugging info
+LDFLAGS = -lpng
 
+# ==============================================================================
+# 2. File Lists and Derived Paths
+# ==============================================================================
+
+# Find all source files in the current directory (or $(SRC_DIR))
+SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+
+# Map source files to their corresponding object file paths in the OBJ_DIR
+# Example: main.cpp -> obj/main.o
+OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
+
+# Full path to the final executable
+EXEC = $(BIN_DIR)/$(TARGET)
+
+# ==============================================================================
+# 3. Core Build Targets
+# ==============================================================================
+
+# Default target: builds the executable
+.PHONY: all
+all: $(EXEC)
+
+# Rule to Link the final executable (The link step)
+# Dependencies: All object files (OBJS)
+# Order-Only Prerequisite: The bin directory must exist (| $(BIN_DIR))
+$(EXEC): $(OBJS) | $(BIN_DIR)
+	@echo "--- Linking executable: $(EXEC) ---"
+	$(CXX) $(OBJS) $(LDFLAGS) -o $@
+
+# Rule to Compile C++ source files into object files
+# This is a pattern rule: %.o is the target, %.cpp is the prerequisite
+# Dependencies: Source file (main.cpp)
+# Order-Only Prerequisite: The obj directory must exist (| $(OBJ_DIR))
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
+	@echo "   Compiling $< -> $@"
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# ==============================================================================
+# 4. Directory Management Rules (Using the Order-Only Prerequisite Pattern)
+# ==============================================================================
+
+# Rule to create the bin directory
+# The `mkdir -p` command ensures it only runs if the directory doesn't exist.
+$(BIN_DIR):
+	@echo "Creating output directory: $(BIN_DIR)"
+	mkdir -p $(BIN_DIR)
+
+# Rule to create the obj directory
+$(OBJ_DIR):
+	@echo "Creating intermediate directory: $(OBJ_DIR)"
+	mkdir -p $(OBJ_DIR)
+
+# ==============================================================================
+# 5. Utility Targets
+# ==============================================================================
+
+# Cleans all generated files and directories
+.PHONY: clean
 clean:
-	$(RM) $(TARGET)
+	@echo "--- Cleaning up build directories ---"
+	$(RM) -r $(BIN_DIR) $(OBJ_DIR)
+
+# Runs the compiled program
+.PHONY: run
+run: $(EXEC)
+	@echo "--- Running $(TARGET) ---"
+	./$(EXEC)

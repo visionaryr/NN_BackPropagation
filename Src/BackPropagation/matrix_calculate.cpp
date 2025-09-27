@@ -5,7 +5,7 @@ using namespace std;
 
 matrix multiply(matrix &A, matrix &B)
 {
-	//cout<<"Before multiply 1:"<<endl;
+  //cout<<"Before multiply 1:"<<endl;
     //A.show();
     //cout<<"Before multiply 2:"<<endl;
     //B.show();
@@ -26,14 +26,14 @@ matrix multiply(matrix &A, matrix &B)
         {
             for(int k=0;k<rb;k++)
             {
-                sum+=A.getMatrix(i,k)*B.getMatrix(k,j);
+                sum+=A.GetValue(i,k)*B.GetValue(k,j);
             }
             Ans.SetValue(i, j, sum);
             sum=0;
         }
     }
-	//cout<<"multiply finished:"<<endl;
-	//Ans.show();
+  //cout<<"multiply finished:"<<endl;
+  //Ans.show();
     return Ans;
 }
 
@@ -47,7 +47,7 @@ matrix transpose(const matrix &A)
     for(int i=0;i<ra;i++)
     {
         for(int j=0;j<ca;j++)
-            Ans.SetValue(j, i, A.getMatrix(i,j));
+            Ans.SetValue(j, i, A.GetValue(i,j));
     }
     return Ans;
 }//end of calculator transpose
@@ -62,7 +62,7 @@ matrix multiplyBy(const matrix &A, double M)
     for(int i=0;i<ra;i++)
     {
         for(int j=0;j<ca;j++)
-            Ans.SetValue(i, j, A.getMatrix(i,j)*M);
+            Ans.SetValue(i, j, A.GetValue(i,j)*M);
     }
     return Ans;
 }//end of calculator multiply By
@@ -83,13 +83,13 @@ matrix add(const matrix &A, const matrix &B)
     {
         for(int l=0;l<column;l++)
         {
-            a=A.getMatrix(k,l);
-            b=B.getMatrix(k,l);
+            a=A.GetValue(k,l);
+            b=B.GetValue(k,l);
             Ans.SetValue(k,l,a+b);
         }
     }
     //cout<<"ANS:"<<endl;
-	//Ans.show();
+  //Ans.show();
     return Ans;
 }//end of calculator add
 

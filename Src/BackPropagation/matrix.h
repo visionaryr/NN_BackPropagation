@@ -6,23 +6,23 @@
 
 class matrix
 {
-	public:
-		matrix();		
-		matrix(int, int);
-		matrix(int, int, std::vector<double>);
-		void show() const;
-		void test_show() const;
-		void setmatrix(int, int, std::vector<double>);
-		int getrow() const;
-		int getcolumn() const;
-		double getMatrix(int, int) const;
-		void SetValue(int, int, double);
-		std::vector<double> convert_to_vector();
+  public:
+    matrix();    
+    matrix(int, int);
+    matrix(int, int, std::vector<double>);
+    void show() const;
+    void test_show() const;
+    int getrow() const;
+    int getcolumn() const;
+    double GetValue(int, int) const;
+    void SetValue(int, int, double);
+    std::vector<double> convert_to_vector();
 
-	private:
-		int row,column;
-		std::vector< std::vector<double> > A;
-		void Init();
+  private:
+    int row,column;
+    std::vector< std::vector<double> > Matrix;
+    void InitZeroMatrix(int, int);
+    int SetMatrix(int, int, std::vector<double>);
 
 };
 

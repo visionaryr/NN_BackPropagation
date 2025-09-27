@@ -4,114 +4,223 @@
 
 using namespace std;
 
+/**
+  Default constructor does nothing. Consumer should never use this one.
 
+**/
 matrix::matrix()
 {
 
 }
 
-matrix::matrix(int r, int c)
-{
-    row=r;
-    column=c;
-	Init();
-}//end of matrix constructor(all zero)
+/**
+  Initialize a Rows * Columns matrix, all elements are set to zero.
 
-matrix::matrix(int r, int c, vector<double> put)
-{
-	row=r;
-	column=c;
-	Init();
-	int counter=0;
-    for(int i=0;i<row;i++)
-    {
-        for(int j=0;j<column;j++)
-        {
-            A[i][j]=put[counter];
-            counter++;
-        }
-    }
-}//end of matrix constructor(with set matrix)
+  @param  row     number of rows
+  @param  column  number of columns
 
+**/
+matrix::matrix(int Rows, int Columns)
+{
+  InitZeroMatrix(Rows, Columns);
+}
+
+/**
+  Initialize a Rows * Columns matrix, all elements are set to the values
+  in the vector InitValues.
+
+  @param  Rows        number of rows
+  @param  Columns     number of columns
+  @param  InitValues  a vector of size Rows*Columns, contains the initial
+                      values of the matrix elements.
+                      The order of the values are in row-major order.
+
+  @throw  std::invalid_argument  Size of InitValues is not equal to (Rows * Columns).
+
+**/
+matrix::matrix(int Rows, int Columns, vector<double> InitValues)
+{
+  int ret = SetMatrix (Rows, Columns, InitValues);
+
+  if (ret != 0) {
+    throw std::invalid_argument("matrix constructor: wrong size of InitValues");
+  }
+}
+
+/**
+  Get the number of rows of the matrix.
+
+  @return  number of rows.
+
+**/
 int matrix::getrow() const
 {
-    return row;
-}//end of matrix getrow
+  return row;
+}
 
+/**
+  Get the number of columns of the matrix.
+
+  @return  number of columns.
+
+**/
 int matrix::getcolumn() const
 {
-    return column;
-}//end of matrix getcolumn
+  return column;
+}
 
+/**
+  Print out the matrix.
+
+**/
 void matrix::show() const
 {
-    for(int i=0;i<row;i++)
+  for(int RowIdx = 0; RowIdx < row; RowIdx++)
+  {
+    for(int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
     {
-        for(int j=0;j<column;j++)
-            cout<<setw(5)<<A[i][j]<<' ';
-        cout<<endl;
+      cout<<setw(5)<<Matrix[RowIdx][ColumnIdx]<<' ';
     }
-}//end of matrix show
+    cout<<endl;
+  }
+}
 
+/**
+  Print out the test matrix.
+  *Test usage.
+
+**/
 void matrix::test_show() const
 {
-	for(int i=0;i<row;i++)
+  for(int RowIdx = 0; RowIdx < row; RowIdx++)
+  {
+    for(int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
     {
-        for(int j=0;j<column;j++)
-            cout<<setw(2)<<(A[i][j]>0.5?1:0);
-        cout<<endl;
+      cout<<setw(2)<<((Matrix[RowIdx][ColumnIdx] > 0.5) ? 1 : 0);
     }
+    cout<<endl;
+  }
 }
 
-void matrix::setmatrix(int r, int c, vector<double> put)
+/**
+  Set the matrix to be a Rows * Columns matrix, all elements are set to the values
+  in the vector SetValues.
+  The previous values in the matrix will be cleared.
+
+  @param  Rows        number of rows
+  @param  Columns     number of columns
+  @param  SetValues   a vector of size Rows*Columns, contains the values
+                      of the matrix elements.
+                      The order of the values are in row-major order.
+
+  @return   0  Matrix is set successfully.
+  @return  -1  Size of SetValues vector is not equal to (Rows * Columns).
+
+**/
+int matrix::SetMatrix(int Rows, int Columns, vector<double> SetValues)
 {
-    row=r;
-    column=c;
-    int counter=0;
-    for(int i=0;i<row;i++)
+  if (SetValues.size() != (unsigned)(Rows * Columns)) {
+    return -1;
+  }
+
+  InitZeroMatrix(Rows, Columns);
+
+  int counter = 0;
+  for(int RowIdx = 0; RowIdx < row; RowIdx++)
+  {
+    for(int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
     {
-        for(int j=0;j<column;j++)
-        {
-            A[i][j]=put[counter];
-            counter++;
-        }
-
+      Matrix[RowIdx][ColumnIdx] = SetValues[counter];
+      counter++;
     }
-}//end of matrix setmatrix
+  }
 
-double matrix::getMatrix(int r, int c) const
-{
-    return A[r][c];
+  return 0;
 }
 
-void matrix::SetValue(int row, int column, double value)
+/**
+  Get the value of the element at (Row, Column).
+
+  @param  Row     Row index of the element.
+  @param  Column  Column index of the element.
+
+  @return  Value of the element at (Row, Column)
+
+**/
+double matrix::GetValue(int Row, int Column) const
 {
-	A[row][column]=value;
-	return;
+  if (Row < 0 || Row >= row || Column < 0 || Column >= column) {
+    throw std::out_of_range("matrix::GetValue: index out of range");
+  }
+  if (Matrix.size() == 0) {
+    throw std::logic_error("matrix::GetValue: matrix is empty");
+  }
+
+  return Matrix[Row][Column];
 }
 
-void matrix::Init()
+/**
+  Set the value to the element at (Row, Column).
+
+  @param  Row     Row index of the element.
+  @param  Column  Column index of the element.
+
+**/
+void matrix::SetValue(int Row, int Column, double Value)
 {
-	vector<double> A1;
-	for(int i=0;i<row;i++)
-	{
-		for(int j=0;j<column;j++)
-		{
-			A1.push_back(0);
-		}
-		A.push_back(A1);
-	}
+ if (Row < 0 || Row >= row || Column < 0 || Column >= column) {
+    throw std::out_of_range("matrix::SetValue: index out of range");
+  }
+  if (Matrix.size() == 0) {
+    throw std::logic_error("matrix::SetValue: matrix is empty");
+  }
+
+  Matrix[Row][Column] = Value;
 }
 
+/**
+  Initialize a Rows * Columns zero matrix.
+  Previous values in the matrix will be cleared.
+
+  @param  Rows     number of rows
+  @param  Columns  number of columns
+
+**/
+void matrix::InitZeroMatrix(int Rows, int Columns)
+{
+  if (Matrix.size () != 0) {
+    Matrix.clear ();
+  }
+
+  row    = Rows;
+  column = Columns;
+
+  for(int RowIdx = 0; RowIdx < row; RowIdx++)
+  {
+    vector<double> ARow(column, 0.0);
+    Matrix.push_back(ARow);
+  }
+}
+
+/**
+  Convert the matrix to a 1-D vector in row-major order.
+
+  @param  Rows     number of rows
+  @param  Columns  number of columns
+
+  @return  A vector of size (Rows * Columns), contains the values
+           of the matrix elements in row-major order.
+
+**/
 vector<double> matrix::convert_to_vector()
 {
-	vector<double> re;
-	for(int i=0;i<row;i++)
-	{
-		for(int j=0;j<column;j++)
-		{
-			re.push_back(A[i][j]);
-		}
-	}
-	return re;
+  vector<double> RetVector;
+  for(int RowIdx = 0; RowIdx < row; RowIdx++)
+  {
+    for(int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
+    {
+      RetVector.push_back(Matrix[RowIdx][ColumnIdx]);
+    }
+  }
+  return RetVector;
 }
