@@ -16,10 +16,13 @@ class matrix
     int getcolumn() const;
     double GetValue(int, int) const;
     void SetValue(int, int, double);
-    std::vector<double> convert_to_vector();
+    std::vector<double> ConvertToVector();
+    std::vector<double> ConvertRowToVector (int) const;
+    std::vector<double> ConvertColumnToVector (int) const;
 
   private:
-    int row,column;
+    int row;
+    int column;
     std::vector< std::vector<double> > Matrix;
     void InitZeroMatrix(int, int);
     int SetMatrix(int, int, std::vector<double>);

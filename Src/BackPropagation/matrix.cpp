@@ -212,7 +212,7 @@ void matrix::InitZeroMatrix(int Rows, int Columns)
            of the matrix elements in row-major order.
 
 **/
-vector<double> matrix::convert_to_vector()
+vector<double> matrix::ConvertToVector()
 {
   vector<double> RetVector;
   for(int RowIdx = 0; RowIdx < row; RowIdx++)
@@ -223,4 +223,51 @@ vector<double> matrix::convert_to_vector()
     }
   }
   return RetVector;
+}
+
+/**
+  Convert a specific row of the matrix to a 1-D vector.
+
+  @param  Row   Row index of the row to be converted.
+
+  @return  A vector of size (Columns), contains the values
+           of the elements in the specified row.
+
+  @throw  std::out_of_range  Row index is out of range.
+
+**/
+vector<double> matrix::ConvertRowToVector (int Row) const
+{
+  if (Row >= row)
+  {
+    throw std::out_of_range("matrix::ConvertRowToVector: index out of range");
+  }
+
+  return Matrix[Row];
+}
+
+/**
+  Convert a specific column of the matrix to a 1-D vector.
+
+  @param  Column   Column index of the column to be converted.
+
+  @return  A vector of size (Rows), contains the values
+           of the elements in the specified column.
+
+  @throw  std::out_of_range  Column index is out of range.
+
+**/
+vector<double> matrix::ConvertColumnToVector (int Column) const
+{
+  if (Column >= column) {
+    throw std::out_of_range("matrix::ConvertColumnToVector: index out of range");
+  }
+
+  vector<double> ColumnVector;
+
+  for (int RowIdx = 0; RowIdx < row; RowIdx++) {
+    ColumnVector.push_back (Matrix[RowIdx][Column]);
+  }
+
+  return ColumnVector;
 }

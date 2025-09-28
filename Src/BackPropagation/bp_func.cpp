@@ -67,7 +67,7 @@ void delta_calc(network &bp, matrix desired_output)
     matrix weight_T=transpose((*bp.weight[i]));
     matrix delta_matrix(bp.nodes[i+1], 1, bp.delta[i+1]);
     matrix x = multiply(weight_T, delta_matrix);
-    vector<double> x_value = x.convert_to_vector();//initialize with x
+    vector<double> x_value = x.ConvertToVector();//initialize with x
     double f_derivative, delta_value;
     for(int j=0;j<(int)x_value.size();j++)
     {
