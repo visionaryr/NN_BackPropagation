@@ -1,6 +1,8 @@
 #include "matrix.h"
 #include "bp.h"
 #include "network.h"
+#include "PreProcess.h"
+
 #include <iostream>
 #include <ctime>
 #include <cstdlib>
@@ -193,7 +195,7 @@ void get_train_images(vector< vector<double> > & arr, vector< vector<double> > &
       vec.push_back(vec_temp);
     }
   }
-  binarization(arr);
+  Binarization(arr);
   
 }
 

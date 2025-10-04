@@ -1,6 +1,8 @@
 #include "bp.h"
 #include "network.h"
 #include "matrix.h"
+#include "PreProcess.h"
+
 #include <string>
 #include <cmath>
 #include <cstring>
@@ -98,7 +100,7 @@ void get_test_images(vector< vector<double> > & arr)
     //get_png_file(arr_temp);
     arr.push_back(arr_temp);
   }
-  binarization(arr);
+  Binarization(arr);
   
 }
 

@@ -2,113 +2,214 @@
 #include <vector>
 #include <fstream>
 #include <stdio.h>
+
+#include "dataset.h"
 #include "bp.h"
  
 #define PAUSE printf("Press Enter key to continue..."); fgetc(stdin); 
  
 using namespace std;
-int ReverseInt (int i)
+
+/**
+  Convert a 32-bit unsigned integer from big-endian to little-endian format.
+
+  @param[in]  BigEndian  The big-endian unsigned integer to be converted.
+
+  @return     The converted little-endian unsigned integer.
+
+**/
+static
+unsigned int
+BigEndianToLittleEndianU32 (
+  unsigned int BigEndian
+)
 {
-    unsigned char ch1, ch2, ch3, ch4;
-    ch1=i&255;
-    ch2=(i>>8)&255;
-    ch3=(i>>16)&255;
-    ch4=(i>>24)&255;
-    return((int)ch1<<24)+((int)ch2<<16)+((int)ch3<<8)+ch4;
+  return ((BigEndian & 0x000000FF) << 24) |
+         ((BigEndian & 0x0000FF00) << 8)  |
+         ((BigEndian & 0x00FF0000) >> 8)  |
+         ((BigEndian & 0xFF000000) >> 24);
 }
 
-void ReadMNIST_and_label(int NumberOfImages, int DataOfAnImage, vector< vector<double> > &arr, vector< vector<double> > &vec, vector<int> &train_cat)
+/**
+  Check if a value is present in a vector.
+
+  @param[in]  VectorToSearch  The vector to be searched.
+  @param[in]  Value           The value to search for.
+
+  @retval  true   The value is found in VectorToSearch.
+  @retval  false  The value is not found in VectorToSearch.
+
+**/
+static
+bool
+ValueInVector (
+  vector<int> &VectorToSearch,
+  int         Value
+  )
 {
-    //ifstream file("train-images.idx3-ubyte",ios::binary);
-    ifstream In_file("train-images.idx3-ubyte", ios::binary);
-    ifstream Out_file("train-labels.idx1-ubyte", ios::binary);
-    if (In_file.is_open() && Out_file.is_open())
-    {
-        vector<double> vec_1d(1,0);
-        int magic_number=0;
-        int number_of_images=0;
-        int n_rows=0;
-        int n_cols=0;
-        In_file.read((char*)&magic_number,sizeof(magic_number));
-        magic_number= ReverseInt(magic_number);
-        In_file.read((char*)&number_of_images,sizeof(number_of_images));
-        number_of_images= ReverseInt(number_of_images);
-        In_file.read((char*)&n_rows,sizeof(n_rows));
-        n_rows= ReverseInt(n_rows);
-        In_file.read((char*)&n_cols,sizeof(n_cols));
-        n_cols= ReverseInt(n_cols);
-        
-        Out_file.read((char*) &magic_number, sizeof(magic_number));
-        magic_number = ReverseInt(magic_number);
-        Out_file.read((char*) &number_of_images,sizeof(number_of_images));
-        number_of_images = ReverseInt(number_of_images);
-        
-        cout<<n_rows<<endl;
-        for(int i=0;i<number_of_images;++i)
-        {
-        unsigned char temp = 0;
-        Out_file.read((char*) &temp, sizeof(temp));
-        vec_1d[0]=(double)temp;
-        if( !in(train_cat,vec_1d[0]) )
-        {
-        unsigned char temp=0;
-                for(int kk=0;kk<784;kk++) In_file.read((char*)&temp,sizeof(temp));
-        continue;  
-        }
-        vec.push_back(vec_1d);
-        vector<double> arr_temp;
-            for(int r=0;r<n_rows;++r)
-            {
-                for(int c=0;c<n_cols;++c)
-                {
-                    unsigned char temp=0;
-                    In_file.read((char*)&temp,sizeof(temp));
-                    arr_temp.push_back( (double)temp );
-                }
-                //cout<<arr_temp.size()<<' '<<arr.size()<<endl;
-              
-            }
-            arr.push_back(arr_temp);
-        }
-        cout<<'*'<<arr.size()<<endl;
+  for (int Index = 0; Index < (int)VectorToSearch.size(); Index++) {
+    if (VectorToSearch[Index] == Value) {
+      return true;
     }
-    binarization(arr);
-    In_file.close();
-    Out_file.close();
+  }
+
+  return false;
 }
 
-/*
-void read_Mnist_Label(vector< vector<double> > &vec, vector<int> &train_cat)
+/**
+  Open an IDX file and read its header.
+
+  @param[in]   filename             The name of the IDX file to be opened.
+  @param[in]   ExpectedMagicNumber  The expected magic number for the IDX file.
+  @param[out]  Header               The header read from the IDX file.
+
+  @return      The opened file stream.
+
+  @throw       runtime_error        One of the following conditions is met:
+                                      * File cannot be opened.
+                                      * The magic number in the file is invalid.
+
+**/
+ifstream
+OpenIdxFile (
+  const string        &filename,
+  const unsigned int  ExpectedMagicNumber,
+  IDX_HEADER          &Header
+  )
 {
-    ifstream file("train-labels.idx1-ubyte", ios::binary);
-    if (file.is_open())
-    {
-        vector<double> vec_1d(1,0);
-        cout<<"*"<<endl;
-        int magic_number = 0;
-        int number_of_images = 0;
-        Out_file.read((char*) &magic_number, sizeof(magic_number));
-        magic_number = ReverseInt(magic_number);
-        Out_file.read((char*) &number_of_images,sizeof(number_of_images));
-        number_of_images = ReverseInt(number_of_images);
-        cout<<number_of_images<<endl;
-        for(int i = 0; i < number_of_images; ++i)
-        {
-            unsigned char temp = 0;
-            file.read((char*) &temp, sizeof(temp));
-            vec_1d[0]=(double)temp;
-            vec.push_back(vec_1d);
-        }
-        cout<<number_of_images<<endl;
-    for(int i=0;i<20;i++)
-    {
-      cout<<vec[i][0]<<endl;
-    }
-    }
-   
+  ifstream      File;
+  unsigned int  MagicNumber = 0;
+  int           Dimension = 0;
+  unsigned int  Value = 0;
+
+  File.open (filename, ios::binary);
+  if (!File.is_open ()) {
+    throw runtime_error ("Error: Cannot open file " + filename);
+  }
+
+  File.read ((char*)&MagicNumber, sizeof(MagicNumber));
+  MagicNumber = BigEndianToLittleEndianU32 (MagicNumber);
+
+  if (MagicNumber != ExpectedMagicNumber) {
+    throw runtime_error ("Error: Invalid magic number in file " + filename +
+                         ". Expected " + to_string(ExpectedMagicNumber) +
+                         ", got " + to_string(MagicNumber)
+                        );
+  }
+
+  Dimension = (int)(MagicNumber & 0xFF);
+
+  Header.resize (Dimension);
+  for (int Index = 0; Index < Dimension; Index++) {
+    File.read ((char *)&Value, sizeof(Value));
+    Header[Index] = BigEndianToLittleEndianU32 (Value);
+  }
+
+  return File;
 }
 
-*/
+/**
+  Read images and labels from the MNIST dataset files.
+
+  This function reads images and their corresponding labels from the MNIST data set files.
+  Only images with labels specified in LabelsToRead are kept.
+
+  @param[out]  DataSet       The vector to store the read images.
+                             Each image is represented as a vector of doubles, and pixels are in row-major order.
+  @param[out]  LabelSet      The vector to store the corresponding labels for the images in DataSet.
+  @param[in]   LabelsToRead  The vector of labels to be read. Only images with these labels will be kept.
+
+  @throw  runtime_error  One of the following conditions is met:
+                          * No labels are specified in LabelsToRead.
+                          * Too many labels are specified in LabelsToRead.
+                          * The image file cannot be opened or has an invalid header.
+                          * The label file cannot be opened or has an invalid header.
+                          * The total number of images does not match the amount number of all labels.
+
+**/
+void
+ReadMNIST_and_label (
+  DATA_SET    &DataSet,
+  LABEL_SET   &LabelSet,
+  vector<int> &LabelsToRead
+  )
+{
+  ifstream      ImagesFile;
+  ifstream      LabelsFile;
+  IDX_HEADER    ImagesFileHeader;
+  IDX_HEADER    LabelsFileHeader;
+  unsigned int  NumberOfImages = 0;
+  unsigned int  NumberOfRows = 0;
+  unsigned int  NumberOfColumns = 0;
+  unsigned int  NumberOfLabels = 0;
+  DATA_SET      Images;
+  LABEL_SET     Labels;
+
+  if (LabelsToRead.size() == 0) {
+    throw runtime_error ("Error: No labels to read");
+  }
+  if (LabelsToRead.size() > 10) {
+    throw runtime_error ("Error: Too many labels to read");
+  }
+
+  //
+  // Open the image file.
+  //
+  ImagesFile = OpenIdxFile ("train-images.idx3-ubyte", 0x00000803, ImagesFileHeader);
+  if (ImagesFileHeader.size() != 3) {
+    throw runtime_error ("Error: Invalid image file header");
+  }
+
+  NumberOfImages  = ImagesFileHeader[0];
+  NumberOfRows    = ImagesFileHeader[1];
+  NumberOfColumns = ImagesFileHeader[2];
+
+  //
+  // Open the label file.
+  //
+  LabelsFile = OpenIdxFile ("train-labels.idx1-ubyte", 0x00000801, LabelsFileHeader);
+  if (LabelsFileHeader.size() != 1) {
+    throw runtime_error ("Error: Invalid image file header");
+  }
+
+  NumberOfLabels  = LabelsFileHeader[0];
+
+  if (NumberOfImages != NumberOfLabels) {
+    throw runtime_error ("Error: The number of images does not match the number of labels");
+  }
+
+  cout << "Number of images: " << NumberOfImages << endl;
+
+  //
+  // Read all images and labels, but only keep those with labels in LabelsToRead.
+  //
+  for (int Index = 0; Index < (int)NumberOfImages; Index++) {
+    vector<double>  Image;
+    unsigned char   Pixel = 0;
+    unsigned char   LabelValue = 0;
+
+    for (int Row = 0; Row < (int)NumberOfRows; Row++) {
+      for (int Column = 0; Column < (int)NumberOfColumns; Column++) {
+        ImagesFile.read ((char*)&Pixel, sizeof(Pixel));
+        Image.push_back ((double)Pixel);
+      }
+    }
+
+    LabelsFile.read ((char*)&LabelValue, sizeof(LabelValue));
+
+    if (ValueInVector (LabelsToRead, (int)LabelValue)) {
+      //
+      // This is the label we want. Add image and label to DataSet and LabelSet respectively.
+      //
+      DataSet.push_back (Image);
+      LabelSet.push_back ((int)LabelValue);
+    }
+  }
+
+  cout << "Number of images read: " << DataSet.size() << endl;
+  ImagesFile.close ();
+  LabelsFile.close ();
+}
 
 
 vector<double> output_convert(int O_dataset, vector<int> &train_cat)
@@ -124,17 +225,6 @@ vector<double> output_convert(int O_dataset, vector<int> &train_cat)
       d_output.push_back(0.0);
   }
   return d_output;
-}
-
-void binarization(vector< vector<double> > &input)
-{
-  for(int i=0;i<(int)input.size();i++)
-  {
-    for(int j=0;j<784;j++)
-    {
-      input[i][j] = (input[i][j] > 128) ? 1 : 0;
-    }
-  }
 }
 
 void show_as_image(matrix &A)
@@ -191,13 +281,4 @@ void load_input_output(vector< vector<double> > &I, vector< vector<double> > &O)
   I.push_back(in);
   O.push_back(out);
 */
-}
-
-bool in(vector<int> &train_cat, double j)
-{
-  for(int i=0;i<(int)train_cat.size();i++)
-  {
-    if((int)j==train_cat[i]) return true;
-  }
-  return false;
 }

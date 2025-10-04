@@ -28,12 +28,9 @@ void ReadMNIST_and_label(int, int, std::vector< std::vector<double> > &, std::ve
 //other global functions
 void load_input_output(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
 std::vector<double> output_convert(int, std::vector<int> &);//convert output from int to binary vector type
-void binarization(std::vector< std::vector<double> > &);
 void load_input_output(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);//set simple data(0,1) for training
 void show_as_image(matrix &);//for input
 int to_number(matrix &, std::vector<int> &);//for output
 double predict(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, int, int, network &, std::vector<int> &);
-
-bool in(std::vector<int> &, double);
 
 #endif
