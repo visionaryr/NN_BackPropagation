@@ -4,8 +4,10 @@
 #include <vector>
 
 typedef std::vector< unsigned int >           IDX_HEADER;
-typedef std::vector< std::vector< double > >  DATA_SET;
-typedef std::vector< int >                    LABEL_SET;
+
+typedef std::vector< double >  IMAGE;
+typedef std::vector< IMAGE >   DATA_SET;
+typedef std::vector< int >     LABEL_SET;
 
 /**
   Read images and labels from the MNIST dataset files.

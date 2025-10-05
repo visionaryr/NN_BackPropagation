@@ -109,6 +109,48 @@ OpenIdxFile (
 }
 
 /**
+  Read a single image from an IDX file.
+
+  @param[in]   File            The file stream of the opened IDX file.
+                               The position of the file pointer should be at the beginning of the image data.
+  @param[in]   NumberOfRows    The number of rows in the image.
+  @param[in]   NumberOfColumns The number of columns in the image.
+
+  @return      The image read from the file, represented as a vector of doubles.
+               Pixels are stored in row-major order.
+
+  @throw       runtime_error   One of the following conditions is met:
+                                * The file is not open or has reached the end of file.  
+
+**/
+static
+IMAGE
+ReadImageFromIdx (
+  ifstream      &File,
+  unsigned int  NumberOfRows,
+  unsigned int  NumberOfColumns
+  )
+{
+  IMAGE          Image;
+  unsigned char  Pixel = 0;
+
+  if (!File.is_open () || File.eof ()) {
+    throw runtime_error ("Error: Cannot read image from file");
+  }
+
+  Image.resize (NumberOfRows * NumberOfColumns);
+
+  for (unsigned int Row = 0; Row < NumberOfRows; Row++) {
+    for (unsigned int Column = 0; Column < NumberOfColumns; Column++) {
+      File.read ((char*)&Pixel, sizeof(Pixel));
+      Image[Row * NumberOfColumns + Column] = (double)Pixel;
+    }
+  }
+
+  return Image;
+}
+
+/**
   Read images and labels from the MNIST dataset files.
 
   This function reads images and their corresponding labels from the MNIST data set files.
@@ -184,26 +226,24 @@ ReadMNIST_and_label (
   // Read all images and labels, but only keep those with labels in LabelsToRead.
   //
   for (int Index = 0; Index < (int)NumberOfImages; Index++) {
-    vector<double>  Image;
-    unsigned char   Pixel = 0;
-    unsigned char   LabelValue = 0;
-
-    for (int Row = 0; Row < (int)NumberOfRows; Row++) {
-      for (int Column = 0; Column < (int)NumberOfColumns; Column++) {
-        ImagesFile.read ((char*)&Pixel, sizeof(Pixel));
-        Image.push_back ((double)Pixel);
-      }
-    }
+    IMAGE          Image;
+    unsigned char  Pixel = 0;
+    unsigned char  LabelValue = 0;
 
     LabelsFile.read ((char*)&LabelValue, sizeof(LabelValue));
 
-    if (ValueInVector (LabelsToRead, (int)LabelValue)) {
+    if (!ValueInVector (LabelsToRead, (int)LabelValue)) {
       //
-      // This is the label we want. Add image and label to DataSet and LabelSet respectively.
+      // This is not the label we want, skip this image.
       //
-      DataSet.push_back (Image);
-      LabelSet.push_back ((int)LabelValue);
+      ImagesFile.seekg (NumberOfRows * NumberOfColumns * sizeof(Pixel), ios::cur);
+      continue;
     }
+  
+    Image = ReadImageFromIdx (ImagesFile, NumberOfRows, NumberOfColumns);
+  
+    Images.push_back (Image);
+    Labels.push_back ((int)LabelValue);
   }
 
   cout << "Number of images read: " << DataSet.size() << endl;
