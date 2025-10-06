@@ -1,10 +1,14 @@
-#ifndef BP_H
-#define BP_H
+#ifndef _BP_H_
+#define _BP_H_
 
 #include "matrix.h"
 #include "network.h"
 #include <vector>
 #include <png.h>
+
+typedef std::vector< double >  IMAGE;
+typedef std::vector< IMAGE >   DATA_SET;
+typedef std::vector< int >     LABEL_SET;
 
 //learning and weight upgrading functions
 matrix activation_f(matrix);

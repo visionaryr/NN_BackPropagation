@@ -1,7 +1,7 @@
 #ifndef _PRE_PROCESS_H_
 #define _PRE_PROCESS_H_
 
-#include "dataset.h"
+#include "BpMisc.h"
 
 /**
   Binarize the pixel values in the dataset.

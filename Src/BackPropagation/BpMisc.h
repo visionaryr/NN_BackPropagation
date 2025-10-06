@@ -1,13 +1,11 @@
-#ifndef _DATA_SET_H_
-#define _DATA_SET_H_
+#ifndef _BACK_PROPAGATION_MISC_H_
+#define _BACK_PROPAGATION_MISC_H_
+
+#include "bp.h"
 
 #include <vector>
 
 typedef std::vector< unsigned int >           IDX_HEADER;
-
-typedef std::vector< double >  IMAGE;
-typedef std::vector< IMAGE >   DATA_SET;
-typedef std::vector< int >     LABEL_SET;
 
 /**
   Read images and labels from the MNIST dataset files.

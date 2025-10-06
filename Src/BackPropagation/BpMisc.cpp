@@ -3,8 +3,7 @@
 #include <fstream>
 #include <stdio.h>
 
-#include "dataset.h"
-#include "bp.h"
+#include "BpMisc.h"
  
 #define PAUSE printf("Press Enter key to continue..."); fgetc(stdin); 
  
