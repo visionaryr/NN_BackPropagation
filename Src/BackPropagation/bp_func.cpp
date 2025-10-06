@@ -5,8 +5,6 @@
 #include <iostream>
 #include <cmath>
 
-#define PAUSE printf("Press Enter key to continue..."); fgetc(stdin);
-
 using namespace std;
 
 matrix activation_f(matrix sum)
