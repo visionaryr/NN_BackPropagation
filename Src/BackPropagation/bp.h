@@ -8,7 +8,7 @@
 
 typedef std::vector< double >  IMAGE;
 typedef std::vector< IMAGE >   DATA_SET;
-typedef std::vector< int >     LABEL_SET;
+typedef std::vector< int >     LABELS;
 
 //learning and weight upgrading functions
 matrix activation_f(matrix);
@@ -31,10 +31,7 @@ void ReadMNIST_and_label(int, int, std::vector< std::vector<double> > &, std::ve
 
 //other global functions
 void load_input_output(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
-std::vector<double> output_convert(int, std::vector<int> &);//convert output from int to binary vector type
 void load_input_output(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);//set simple data(0,1) for training
-void show_as_image(matrix &);//for input
-int to_number(matrix &, std::vector<int> &);//for output
 double predict(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, int, int, network &, std::vector<int> &);
 
 #endif

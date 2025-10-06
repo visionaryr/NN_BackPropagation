@@ -77,7 +77,7 @@ int main()
       flag.insert(rand_i);
       
       matrix input((int)In[rand_i].size(),1,In[rand_i]);
-      matrix d_output(10,1, output_convert(Out[rand_i][0]) );
+      matrix d_output(10,1, ConvertOutputValueToVector(Out[rand_i][0]) );
       Learning_FP(N1,input);
       
       loss=loss_func(N1,d_output);
@@ -144,9 +144,10 @@ double predict(vector< vector<double> > &In, vector< vector<double> > &Out, int 
   for(int i=start+amount-1;i>=0;i--)
   {
     matrix test_input((int)In[i].size(),1,In[i]);
-    //show_as_image(test_input);
+    //DumpMNISTImage (test_input);
     matrix ANS = N1.test(test_input);
-    int ans = to_number(ANS, training_cat);
+    vector<double> ANS_vec = ANS.ConvertToVector ();
+    int ans = ConvertOutputVectorToValue (ANS_vec, training_cat);
     //cout<<"ANS: "<<ans<<endl;
     if(ans==Out[i][0]) correct++;
   }
@@ -286,7 +287,7 @@ int main()
         flag.insert(rand_i);
         
         matrix input((int)In[rand_i].size(),1,In[rand_i]);
-        vector<double> output = output_convert(Out[rand_i][0], training_cat);
+        vector<double> output = ConvertOutputValueToVector(Out[rand_i][0], training_cat);
         matrix d_output((int)training_cat.size(),1, output );
         
         

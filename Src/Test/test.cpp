@@ -2,6 +2,7 @@
 #include "network.h"
 #include "matrix.h"
 #include "PreProcess.h"
+#include "MnistDataSet.h"
 
 #include <string>
 #include <cmath>
@@ -22,9 +23,10 @@ double predict(vector< vector<double> > &In, vector< vector<double> > &Out, int 
   for(int i=start+1;i<start+amount;i++)
   {
     matrix test_input((int)In[i].size(),1,In[i]);
-    show_as_image(test_input);
+    DumpMNISTImage (test_input);
     matrix ANS = N1.test(test_input);
-    int ans = to_number(ANS, training_cat);
+    vector<double> ANS_vec = ANS.ConvertToVector ();
+    int ans = ConvertOutputVectorToValue (ANS_vec, training_cat);
     cout<<"ANS: "<<ans<<endl;
     if(ans==Out[i][0]) correct++;
   }
@@ -34,9 +36,10 @@ double predict(vector< vector<double> > &In, vector< vector<double> > &Out, int 
     i=(rand()%5)*4000+ri;
     matrix test_input((int)In[i-1].size(),1,In[i-1]);
     
-    show_as_image(test_input);
+    DumpMNISTImage (test_input);
     matrix ANS = N1.test(test_input);
-    int ans = to_number(ANS, training_cat);
+    vector<double> ANS_vec = ANS.ConvertToVector ();
+    int ans = ConvertOutputVectorToValue (ANS_vec, training_cat);
     //cout<<"ANS: "<<ans<<endl;
     //fs<<counter<<' '<<ans<<endl;
     if(ans==Out[i-1][0]) correct++;
@@ -55,9 +58,10 @@ void predict_to_txt(vector< vector<double> > &In, int amount, network &N1, vecto
     for(int j=0;j<zeros;j++) { counter+="0"; }
     counter+=to_string(i);
     matrix test_input((int)In[i-1].size(),1,In[i-1]);
-    show_as_image(test_input);
+    DumpMNISTImage (test_input);
     matrix ANS = N1.test(test_input);
-    int ans = to_number(ANS, training_cat);
+    vector<double> ANS_vec = ANS.ConvertToVector ();
+    int ans = ConvertOutputVectorToValue (ANS_vec, training_cat);
     cout<<"ANS: "<<ans<<endl;
     fs<<counter<<' '<<ans<<endl;
   }

@@ -5,32 +5,67 @@
 
 #include <vector>
 
-typedef std::vector< unsigned int >           IDX_HEADER;
+/**
+  Convert a desired output label to a binary vector representation.
+
+  This function converts a desired output label to a binary vector representation.
+  The length of the output vector is equal to the number of training labels.
+  The element corresponding to the desired label is set to 1, and all other elements are set to 0.
+
+  @param[in]   DesireOutputLabel  The desired output label to be converted.
+  @param[in]   TrainLabels        The vector of training labels.
+
+  @return      The binary vector representation of the desired output label.
+
+  @throw       runtime_error      One of the following conditions is met:
+                                    * No training labels are specified in TrainLabels.
+                                    * Too many training labels are specified in TrainLabels.
+                                    * The desired output label is not in TrainLabels.
+**/
+std::vector<double>
+ConvertOutputValueToVector (
+  int     DesireOutputLabel,
+  LABELS  &TrainLabels
+  );
 
 /**
-  Read images and labels from the MNIST dataset files.
+  Convert an output vector to the corresponding label value.
 
-  This function reads images and their corresponding labels from the MNIST data set files.
-  Only images with labels specified in LabelsToRead are kept.
+  This function converts an output vector to the corresponding label value.
+  The index of the maximum value in the output vector is used to determine the label.
+  The label corresponding to that index in TrainLabels is returned.
 
-  @param[out]  DataSet       The vector to store the read images.
-                             Each image is represented as a vector of doubles, and pixels are in row-major order.
-  @param[out]  LabelSet      The vector to store the corresponding labels for the images in DataSet.
-  @param[in]   LabelsToRead  The vector of labels to be read. Only images with these labels will be kept.
+  @param[in]   OutputVector  The output vector to be converted.
+  @param[in]   TrainLabels   The vector of training labels.
 
-  @throw  runtime_error  One of the following conditions is met:
-                          * No labels are specified in LabelsToRead.
-                          * Too many labels are specified in LabelsToRead.
-                          * The image file cannot be opened or has an invalid header.
-                          * The label file cannot be opened or has an invalid header.
-                          * The total number of images does not match the amount number of all labels.
+  @return      The label value corresponding to the maximum value in OutputVector.
+
+  @throw       runtime_error  One of the following conditions is met:
+                                * No training labels are specified in TrainLabels.
+                                * Too many training labels are specified in TrainLabels.
+                                * The size of OutputVector does not match the size of TrainLabels.
 
 **/
-void
-ReadMNIST_and_label (
-  DATA_SET          &DataSet,
-  LABEL_SET         &LabelSet,
-  std::vector<int>  &LabelsToRead
+int
+ConvertOutputVectorToValue (
+  std::vector<double>  &OutputVector,
+  LABELS               &TrainLabels
+  );
+
+/**
+  Check if a value is present in a vector.
+
+  @param[in]  VectorToSearch  The vector to be searched.
+  @param[in]  Value           The value to search for.
+
+  @retval  true   The value is found in VectorToSearch.
+  @retval  false  The value is not found in VectorToSearch.
+
+**/
+bool
+ValueInVector (
+  std::vector<int>  &VectorToSearch,
+  int               Value
   );
 
 #endif
