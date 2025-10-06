@@ -30,8 +30,6 @@ void ReadMNIST_and_label(int, int, std::vector< std::vector<double> > &, std::ve
 //void read_Mnist_Label(std::vector< std::vector<double> > &, std::vector<int> &);
 
 //other global functions
-void load_input_output(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);
-void load_input_output(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &);//set simple data(0,1) for training
 double predict(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, int, int, network &, std::vector<int> &);
 
 #endif

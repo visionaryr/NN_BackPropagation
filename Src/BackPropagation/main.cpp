@@ -44,8 +44,6 @@ int main()
   cout<<"//////////////////"<<endl;
   read_Mnist_Label(Out);
   
-  //load_input_output(In, Out);
-  
   double loss=1;
   int epoch=1;
   double sum, var, mean, sd;
@@ -215,7 +213,6 @@ int main()
   //read_Mnist_Label(Out);
   cout<<In.size()<<' '<<Out.size()<<endl;
   int train_images = In.size();
-  //load_input_output(In, Out);
   
   double loss=1;
   int epoch=1;

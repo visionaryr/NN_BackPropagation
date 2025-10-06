@@ -130,37 +130,3 @@ ConvertOutputVectorToValue (
 
   return TrainLabels[GetMaxIndex (OutputVector)];
 }
-
-//load simple data(0,1) for training
-void load_input_output(vector< vector<double> > &I, vector< vector<double> > &O)
-{
-  double a[2]={1,1};
-  double b[2]={0,1};
-  vector<double> in(a,a+sizeof(a)/sizeof(double));
-  vector<double> out(b,b+sizeof(b)/sizeof(double));
-
-  I.push_back(in);
-  O.push_back(out);
-  /*
-  //In:0,1; out:1,1,0
-  a[0]=0; a[1]=1; b[0]=1; b[1]=1; b[2]=0;
-  in.assign(a,a+sizeof(a)/sizeof(double));
-  out.assign(b,b+sizeof(b)/sizeof(double));
-  I.push_back(in);
-  O.push_back(out);
-  
-  //In:1,0; out:1,0,1
-  a[0]=1; a[1]=0; b[0]=1; b[1]=0; b[2]=1;
-  in.assign(a,a+sizeof(a)/sizeof(double));
-  out.assign(b,b+sizeof(b)/sizeof(double));
-  I.push_back(in);
-  O.push_back(out);
-  
-  //In:1,1; out:0,1,1
-  a[0]=1; a[1]=1; b[0]=0; b[1]=1; b[2]=1;
-  in.assign(a,a+sizeof(a)/sizeof(double));
-  out.assign(b,b+sizeof(b)/sizeof(double));
-  I.push_back(in);
-  O.push_back(out);
-*/
-}
