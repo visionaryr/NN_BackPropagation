@@ -11,7 +11,7 @@ typedef std::vector< IMAGE >   DATA_SET;
 typedef std::vector< int >     LABELS;
 
 //learning and weight upgrading functions
-matrix activation_f(matrix);
+matrix Activation (matrix);
 void Learning_FP(network &, matrix);
 void delta_calc(network &, matrix desired_output);
 std::vector<matrix> delta_w_calc(network &, double);

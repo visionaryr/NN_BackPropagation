@@ -3,6 +3,7 @@
 #define MATRIX_H
 
 #include <vector>
+#include <functional>
 
 class matrix
 {
@@ -16,9 +17,12 @@ class matrix
     int getcolumn() const;
     double GetValue(int, int) const;
     void SetValue(int, int, double);
+
     std::vector<double> ConvertToVector();
     std::vector<double> ConvertRowToVector (int) const;
     std::vector<double> ConvertColumnToVector (int) const;
+
+    matrix ApplyElementWise (std::function<double(double)> &Func) const;
 
   private:
     int row;

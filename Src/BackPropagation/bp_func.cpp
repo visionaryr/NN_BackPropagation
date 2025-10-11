@@ -7,20 +7,39 @@
 
 using namespace std;
 
-matrix activation_f(matrix sum)
+/**
+  The activation function f(x) = 1 / (1 + e^(-x)).
+
+  @param  x   input value.
+
+  @return  The output value after applying the activation function.
+
+**/
+double 
+ActivationFunction (
+  double x
+  )
 {
-  int row=sum.getrow();
-  int column=sum.getcolumn();
-  double sum_value, f_value;
-  matrix f(row,column);
-  for(int i=0;i<row;i++)
-  {
-    sum_value=sum.GetValue(i,0);
-    f_value=1/(1+exp((-1)*sum_value));
-    //cout<<exp((-1)*sum_value)<<endl;
-    f.SetValue(i,0,f_value);
-  }
-  return f;
+  return 1 / (1 + exp((-1) * x));
+}
+
+/**
+  Apply the activation function to each element of the input matrix.
+
+  @param  Input   Input matrix.
+
+  @return  A matrix with the same size as input, contains the output values
+           after applying the activation function to each element of the input matrix.
+
+**/
+matrix
+Activation (
+  matrix Input
+  )
+{
+  function<double(double)> Func = ActivationFunction;
+
+  return Input.ApplyElementWise (Func);
 }
 
 void Learning_FP(network &bp, matrix input)
@@ -38,7 +57,7 @@ void Learning_FP(network &bp, matrix input)
   {
     matrix node_values(bp.nodes[i],1,bp.a[i]);
     sum=multiply( (*bp.weight[i]) , node_values);//sum
-    f=activation_f(sum);//activation rule
+    f=Activation(sum);//activation rule
     for(int j=0;j<f.getrow();j++)
     {
       bp.set_a(i+1,j,f.GetValue(j,0));

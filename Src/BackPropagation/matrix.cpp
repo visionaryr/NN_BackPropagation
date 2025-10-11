@@ -1,4 +1,5 @@
 #include "matrix.h"
+
 #include <iostream>
 #include <iomanip>
 
@@ -270,4 +271,33 @@ vector<double> matrix::ConvertColumnToVector (int Column) const
   }
 
   return ColumnVector;
+}
+
+/**
+  Apply a mathematical function to each element of this matrix.
+  C = Func(Matrix).
+
+  @param  Func  The function to be applied to each element of this matrix.
+
+  @return  The result matrix.
+
+**/
+matrix
+matrix::ApplyElementWise (
+  std::function<double(double)> &Func
+  ) const
+{
+  matrix C(row, column);
+
+  for(int RowIdx = 0; RowIdx < row; RowIdx++) {
+    for(int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++) {
+      C.SetValue (
+          RowIdx,
+          ColumnIdx,
+          Func(Matrix[RowIdx][ColumnIdx])
+          );
+    }
+  }
+
+  return C;
 }
