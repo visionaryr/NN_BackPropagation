@@ -3,14 +3,15 @@
 
 #include "matrix.h"
 #include "bp.h"
+
 #include <vector>
 #include <fstream>
 
-class network
+class FullyConnectedNetwork
 {
   public:
-    network(std::vector<int> &);
-    network(char*);
+    FullyConnectedNetwork(std::vector<int> &);
+    FullyConnectedNetwork(char*);
     void show_info();
     //void Learning_FP(matrix);
     void set_a(int, int, double);
@@ -20,11 +21,12 @@ class network
     void save_network();
     void print_a();
     void print_delta();
-    friend void Learning_FP(network &, matrix);
-    friend void delta_calc(network &, matrix);
-    friend std::vector<matrix> delta_w_calc(network &, double);
-    friend void upgrade_weight(network &, std::vector<matrix> &);
-    friend double loss_func(network &, matrix &);
+    friend void Learning_FP(FullyConnectedNetwork &, matrix);
+    friend void delta_calc(FullyConnectedNetwork &, matrix);
+    friend std::vector<matrix> delta_w_calc(FullyConnectedNetwork &, double);
+    friend void upgrade_weight(FullyConnectedNetwork &, std::vector<matrix> &);
+    friend double loss_func(FullyConnectedNetwork &, matrix &);
+
   private:
     void Init_para();
     void network_rand_Init();
@@ -34,7 +36,7 @@ class network
     std::vector< std::vector<double> > a;
     std::vector< std::vector<double> > delta;
     std::vector<matrix *> weight;
-    std::vector<int> nodes;
+    std::vector<int> Layout;
 };
 
 void save_weight_to_file(std::fstream &, matrix &);

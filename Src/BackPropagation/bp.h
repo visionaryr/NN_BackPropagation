@@ -2,7 +2,7 @@
 #define _BP_H_
 
 #include "matrix.h"
-#include "network.h"
+#include "FullyConnectedNetwork.h"
 #include <vector>
 #include <png.h>
 
@@ -12,11 +12,11 @@ typedef std::vector< int >     LABELS;
 
 //learning and weight upgrading functions
 matrix Activation (matrix);
-void Learning_FP(network &, matrix);
-void delta_calc(network &, matrix desired_output);
-std::vector<matrix> delta_w_calc(network &, double);
-void upgrade_weight(network &, std::vector<matrix> &);
-double loss_func(network &, matrix &);
+void Learning_FP(FullyConnectedNetwork &, matrix);
+void delta_calc(FullyConnectedNetwork &, matrix desired_output);
+std::vector<matrix> delta_w_calc(FullyConnectedNetwork &, double);
+void upgrade_weight(FullyConnectedNetwork &, std::vector<matrix> &);
+double loss_func(FullyConnectedNetwork &, matrix &);
 
 //read png file
 bool read_png_file(char *filename, std::vector<double> &);
@@ -30,6 +30,6 @@ void ReadMNIST_and_label(int, int, std::vector< std::vector<double> > &, std::ve
 //void read_Mnist_Label(std::vector< std::vector<double> > &, std::vector<int> &);
 
 //other global functions
-double predict(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, int, int, network &, std::vector<int> &);
+double predict(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, int, int, FullyConnectedNetwork &, std::vector<int> &);
 
 #endif

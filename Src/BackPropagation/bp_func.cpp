@@ -1,6 +1,6 @@
 #include "bp.h"
 #include "matrix.h"
-#include "network.h"
+#include "FullyConnectedNetwork.h"
 #include <vector>
 #include <iostream>
 #include <cmath>
@@ -42,7 +42,7 @@ Activation (
   return Input.ApplyElementWise (Func);
 }
 
-void Learning_FP(network &bp, matrix input)
+void Learning_FP(FullyConnectedNetwork &bp, matrix input)
 {
   int input_row=input.getrow();
 
@@ -55,7 +55,7 @@ void Learning_FP(network &bp, matrix input)
   matrix sum,f;
   for(int i=0;i<(int)bp.weight.size();i++)
   {
-    matrix node_values(bp.nodes[i],1,bp.a[i]);
+    matrix node_values(bp.Layout[i],1,bp.a[i]);
     sum=multiply( (*bp.weight[i]) , node_values);//sum
     f=Activation(sum);//activation rule
     for(int j=0;j<f.getrow();j++)
@@ -66,10 +66,10 @@ void Learning_FP(network &bp, matrix input)
 }
 
 
-void delta_calc(network &bp, matrix desired_output)
+void delta_calc(FullyConnectedNetwork &bp, matrix desired_output)
 {
-  int last_layer_num = (int)bp.nodes.size()-1;
-  int last_layer_size = bp.nodes.back();
+  int last_layer_num = (int)bp.Layout.size()-1;
+  int last_layer_size = bp.Layout.back();
   double d_output, delta_temp, a_i;
   for(int i=0;i<last_layer_size;i++)
   {
@@ -82,7 +82,7 @@ void delta_calc(network &bp, matrix desired_output)
   for(int i=bp.weight.size()-1;i>0;i--)
   {
     matrix weight_T=transpose((*bp.weight[i]));
-    matrix delta_matrix(bp.nodes[i+1], 1, bp.delta[i+1]);
+    matrix delta_matrix(bp.Layout[i+1], 1, bp.delta[i+1]);
     matrix x = multiply(weight_T, delta_matrix);
     vector<double> x_value = x.ConvertToVector();//initialize with x
     double f_derivative, delta_value;
@@ -110,7 +110,7 @@ void delta_calc(network &bp, matrix desired_output)
   
 }
 
-vector<matrix> delta_w_calc(network &bp, double learning_rate)
+vector<matrix> delta_w_calc(FullyConnectedNetwork &bp, double learning_rate)
 {
 
   vector<matrix> delta_w;
@@ -118,9 +118,9 @@ vector<matrix> delta_w_calc(network &bp, double learning_rate)
   for(int i=0;i<(int)bp.weight.size();i++)
   {
     vector<double> delta_w_value;
-    for(int j=0;j<bp.nodes[i+1];j++)
+    for(int j=0;j<bp.Layout[i+1];j++)
     {
-      for(int k=0;k<bp.nodes[i];k++)
+      for(int k=0;k<bp.Layout[i];k++)
       {
         delta_w_temp=learning_rate*bp.delta[i+1][j]*bp.a[i][k];
         //cout<<i<<' '<<j<<' '<<k<<endl;
@@ -129,13 +129,13 @@ vector<matrix> delta_w_calc(network &bp, double learning_rate)
       }
       //cout<<endl;
     }
-    matrix delta_w_layer(bp.nodes[i+1], bp.nodes[i], delta_w_value);
+    matrix delta_w_layer(bp.Layout[i+1], bp.Layout[i], delta_w_value);
     delta_w.push_back(delta_w_layer);
   }
   return delta_w;
 }
 
-void upgrade_weight(network &bp, vector<matrix> &delta_w)
+void upgrade_weight(FullyConnectedNetwork &bp, vector<matrix> &delta_w)
 {
   vector<matrix> new_weight;
   for(int i=0;i<(int)bp.weight.size();i++)
@@ -145,10 +145,10 @@ void upgrade_weight(network &bp, vector<matrix> &delta_w)
   //bp.weight=new_weight;
 }
 
-double loss_func(network &bp, matrix &desired_output)
+double loss_func(FullyConnectedNetwork &bp, matrix &desired_output)
 {
   double loss, temp;
-  int n=bp.nodes.size()-1;
+  int n=bp.Layout.size()-1;
   for(int i=0;i<desired_output.getrow();i++)
   {
     temp=(desired_output.GetValue(i,0)-bp.a[n][i]);
@@ -171,13 +171,13 @@ vector<matrix> BatchMode_sum(vector<matrix> &to_add, vector<matrix> &sum)
   return new_sum;
 }
 
-vector<matrix> BatchMode_Init(vector<int> &nodes)
+vector<matrix> BatchMode_Init(vector<int> &Layout)
 {
   vector<matrix> Init;
-  for(int i=0;i<(int)nodes.size()-1;i++)
+  for(int i=0;i<(int)Layout.size()-1;i++)
   {
-    vector<double> AA(nodes[i+1]*nodes[i], 0.0);
-    matrix A(nodes[i+1], nodes[i], AA);
+    vector<double> AA(Layout[i+1]*Layout[i], 0.0);
+    matrix A(Layout[i+1], Layout[i], AA);
     Init.push_back(A);
   }
   return Init;

@@ -1,5 +1,5 @@
 #include "bp.h"
-#include "network.h"
+#include "FullyConnectedNetwork.h"
 #include "matrix.h"
 #include "PreProcess.h"
 #include "MnistDataSet.h"
@@ -15,7 +15,7 @@
 
 using namespace std;
 
-double predict(vector< vector<double> > &In, vector< vector<double> > &Out, int start, int amount, network &N1, vector<int> &training_cat)
+double predict(vector< vector<double> > &In, vector< vector<double> > &Out, int start, int amount, FullyConnectedNetwork &N1, vector<int> &training_cat)
 {
   int correct=0;
   int i;
@@ -47,7 +47,7 @@ double predict(vector< vector<double> > &In, vector< vector<double> > &Out, int 
   return (double)correct/amount;
 }
 
-void predict_to_txt(vector< vector<double> > &In, int amount, network &N1, vector<int> &training_cat)
+void predict_to_txt(vector< vector<double> > &In, int amount, FullyConnectedNetwork &N1, vector<int> &training_cat)
 {
   ofstream fs("410685036.txt", ios::out);
   int zeros;
@@ -77,7 +77,7 @@ int main()
   vector< vector<double> > In;
   vector< vector<double> > Out;
   ReadMNIST_and_label(60000,784,In,Out,training_cat);
-  network N1("784_15_3.txt");
+  FullyConnectedNetwork N1("784_15_3.txt");
   cout<<"*Accuracy: "<<predict(In, Out, test_images, 1000, N1, training_cat)<<endl;
   return 0;
 }
@@ -117,7 +117,7 @@ int main()
   vector< vector<double> > In;
   vector< vector<double> > Out;
   ReadMNIST_and_label(60000,784,In,Out,training_cat);
-  network N1("784_15_10.txt");
+  FullyConnectedNetwork N1("784_15_10.txt");
   cout<<"*Accuracy: "<<predict(In, Out, test_images, 2000, N1, training_cat)<<endl;
   
   return 0;
@@ -132,7 +132,7 @@ int main()
   vector< vector<double> > In;
   vector< vector<double> > Out;
   get_test_images(In);
-  network N1("784_15_5.txt");
+  FullyConnectedNetwork N1("784_15_5.txt");
   predict_to_txt(In, 5000, N1, training_cat);
   //cout<<"predict: "<<predict(In, Out, 1000, 5000, N1, training_cat)<<endl;
 }

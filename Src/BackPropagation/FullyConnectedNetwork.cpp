@@ -1,6 +1,7 @@
 #include "bp.h"
 #include "matrix.h"
-#include "network.h"
+#include "FullyConnectedNetwork.h"
+
 #include <vector>
 #include <iostream>
 #include <iomanip>
@@ -11,9 +12,9 @@
 
 using namespace std;
 
-network::network(vector<int> &network_frame)
+FullyConnectedNetwork::FullyConnectedNetwork(vector<int> &network_frame)
 {
-  nodes=network_frame;
+  Layout=network_frame;
   weight_Init();
   //network_rand_Init();
   Init_para();
@@ -21,7 +22,7 @@ network::network(vector<int> &network_frame)
   show_info();
 }
 
-network::network(char *filename)
+FullyConnectedNetwork::FullyConnectedNetwork(char *filename)
 {
   
   fstream inFile(filename, ios::in);
@@ -35,12 +36,12 @@ network::network(char *filename)
   istringstream delim(line);
   while (getline(delim, token, ','))        
     {
-        nodes.push_back(stoi(token));                                          
+        Layout.push_back(stoi(token));                                          
     }
     
   size_t offset;//offset
   double ww;
-  for(int i=0;i<(int)nodes.size()-1;i++)
+  for(int i=0;i<(int)Layout.size()-1;i++)
   {
     getline(inFile, line);
     
@@ -51,14 +52,14 @@ network::network(char *filename)
       ww = stod(token, &offset);
       w.push_back(ww);
     }
-    matrix *new_weight = new matrix(nodes[i+1], nodes[i], w);
+    matrix *new_weight = new matrix(Layout[i+1], Layout[i], w);
     weight.push_back(new_weight);
   }
   Init_para();
   show_info();
 }
 
-void network::show_info()
+void FullyConnectedNetwork::show_info()
 {
   int foreNodes, backNodes;
   int midlayers=weight.size();
@@ -72,7 +73,7 @@ void network::show_info()
   }
 }
 
-void network::test_Init()
+void FullyConnectedNetwork::test_Init()
 {
   fstream fs("weight.txt",ios::in);
   if(!fs) { cerr<<"File error"<<endl; exit(1);}
@@ -97,7 +98,7 @@ void network::test_Init()
   }
 }
 
-void network::network_rand_Init()
+void FullyConnectedNetwork::network_rand_Init()
 {
   matrix *w;
   int midlayers=weight.size();
@@ -119,7 +120,7 @@ void network::network_rand_Init()
   }
 }
 
-double network::rand_value()
+double FullyConnectedNetwork::rand_value()
 {
   double value, sign;
   value = (double)(rand()%10 + 1)/10;
@@ -128,29 +129,29 @@ double network::rand_value()
   return value;
 }
 
-void network::Init_para()
+void FullyConnectedNetwork::Init_para()
 {
   vector<double> temp;
-  for(int i=0;i<(int)nodes.size();i++)
+  for(int i=0;i<(int)Layout.size();i++)
   {
-    temp.assign(nodes[i],0);
+    temp.assign(Layout[i],0);
     a.push_back(temp);
     delta.push_back(temp);
   }
 }
 
 
-void network::set_a(int layer, int num, double value)
+void FullyConnectedNetwork::set_a(int layer, int num, double value)
 {
   a[layer][num]=value;
 }
 
-void network::set_delta(int layer, int num, double value)
+void FullyConnectedNetwork::set_delta(int layer, int num, double value)
 {
   delta[layer][num]=value;
 }
 
-void network::shake()
+void FullyConnectedNetwork::shake()
 {
   cout<<"*shake!*"<<endl;
   int row,column;
@@ -165,32 +166,32 @@ void network::shake()
   //show_info();
 }
 
-matrix network::test(matrix &input)
+matrix FullyConnectedNetwork::test(matrix &input)
 {
   Learning_FP(*this, input);
   matrix output(a.back().size(),1,a.back());
   return output;
 }
 
-void network::weight_Init()
+void FullyConnectedNetwork::weight_Init()
 {
-  for(int i=0;i<(int)nodes.size()-1;i++)
+  for(int i=0;i<(int)Layout.size()-1;i++)
   {
-    matrix *new_weight = new matrix(nodes[i+1], nodes[i]);
-    cout<<nodes[i]<<' '<<nodes[i+1]<<endl;
+    matrix *new_weight = new matrix(Layout[i+1], Layout[i]);
+    cout<<Layout[i]<<' '<<Layout[i+1]<<endl;
     weight.push_back(new_weight);
   }
   //network_rand_Init();
   test_Init();
 }
 
-void network::save_network()
+void FullyConnectedNetwork::save_network()
 {
   string filename("");
-  for(int i=0;i<(int)nodes.size();i++)
+  for(int i=0;i<(int)Layout.size();i++)
   {
-    filename+=to_string(nodes[i]);
-    if(i!=(int)nodes.size()-1) filename+="_";
+    filename+=to_string(Layout[i]);
+    if(i!=(int)Layout.size()-1) filename+="_";
     else filename+=".txt";
   }
   cout<<filename<<endl;
@@ -200,10 +201,10 @@ void network::save_network()
     cerr<<"file opening error!"<<endl;
     exit(1);
   }
-  //write nodes
-  for(int i=0;i<(int)nodes.size();i++)
+  //write Layout
+  for(int i=0;i<(int)Layout.size();i++)
   {
-    fs<<nodes[i]<<',';
+    fs<<Layout[i]<<',';
   }
   fs<<endl;
   
@@ -229,7 +230,7 @@ void save_weight_to_file(fstream &fs, matrix &weight)
   fs<<endl;
 }
 
-void network::print_a()
+void FullyConnectedNetwork::print_a()
 {
   for(int i=0;i<(int)a.size();i++)
   {
@@ -241,7 +242,7 @@ void network::print_a()
   }
 }
 
-void network::print_delta()
+void FullyConnectedNetwork::print_delta()
 {
   for(int i=0;i<(int)delta.size();i++)
   {

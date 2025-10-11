@@ -1,6 +1,6 @@
 #include "matrix.h"
 #include "bp.h"
-#include "network.h"
+#include "FullyConnectedNetwork.h"
 #include "PreProcess.h"
 
 #include <iostream>
@@ -51,9 +51,9 @@ int main()
   int aa[4]={784,526,268,10};
   vector<int> network_frame(aa,aa+sizeof(aa)/sizeof(int));
   
-  network N1(network_frame);//network init.
+  FullyConnectedNetwork N1(network_frame);//network init.
   //N1.show_info();
-  //network N1("1.txt");
+  //FullyConnectedNetwork N1("1.txt");
   PAUSE;
   vector<double> last_15;
   clock_t t;
@@ -135,7 +135,7 @@ int main()
 }
 */
 
-double predict(vector< vector<double> > &In, vector< vector<double> > &Out, int start, int amount, network &N1, vector<int> &training_cat)
+double predict(vector< vector<double> > &In, vector< vector<double> > &Out, int start, int amount, FullyConnectedNetwork &N1, vector<int> &training_cat)
 {
   int correct=0;
   //for(int i=start+1;i<start+amount;i++)
@@ -161,7 +161,7 @@ int main()
   vector< vector<double> > In;
   vector< vector<double> > Out;
   ReadMNIST_and_label(60000,784,In,Out,training_cat);
-  network N1("784_30_10.txt");
+  FullyConnectedNetwork N1("784_30_10.txt");
   cout<<"*Accuracy: "<<predict(In, Out, test_images, 1000, N1, training_cat)<<endl;
   return 0;
 }
@@ -255,9 +255,9 @@ int main()
   
     loss=1; epoch=1;
     
-    network N1(network_frame[times]);//network init.
+    FullyConnectedNetwork N1(network_frame[times]);//network init.
     //N1.show_info();
-    //network N1("1.txt");
+    //FullyConnectedNetwork N1("1.txt");
     //PAUSE;
     vector<double> last_15;
     clock_t t_start, t_end;
