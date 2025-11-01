@@ -1,6 +1,7 @@
 #include "bp.h"
 #include "matrix.h"
 #include "FullyConnectedNetwork.h"
+#include "DebugLib.h"
 
 #include <vector>
 #include <iostream>
@@ -12,25 +13,39 @@
 
 using namespace std;
 
-FullyConnectedNetwork::FullyConnectedNetwork(vector<int> &network_frame)
+/**
+  Constructor to initialize a fully connected network with given network frame.
+  The detail information of the network will be shown after initialization.
+
+  @param  NetworkFrame  A vector of integers representing the number of nodes in each layer.
+
+**/
+FullyConnectedNetwork::FullyConnectedNetwork (
+  vector<int> &NetworkFrame
+  )
 {
-  Layout=network_frame;
-  weight_Init();
-  //network_rand_Init();
+  Layout = NetworkFrame;
+
+  WeightsMatrixInit(true);
   Init_para();
-  //test_Init();
-  show_info();
+  ShowInfo (false);
 }
 
+/**
+  Constructor to initialize a fully connected network with given filename which contains all weights of each layer.
+  The detail information of the network will be shown after initialization.
+
+  @param  filename  A character pointer representing the name of the file containing network weights.
+
+**/
 FullyConnectedNetwork::FullyConnectedNetwork(char *filename)
 {
-  
   fstream inFile(filename, ios::in);
-  if(!inFile)
-  {
+  if(!inFile) {
     cerr<<"File opening error!"<<endl;
     exit(1);
   }
+
   string line, token;  
   getline(inFile, line);
   istringstream delim(line);
@@ -53,23 +68,56 @@ FullyConnectedNetwork::FullyConnectedNetwork(char *filename)
       w.push_back(ww);
     }
     matrix *new_weight = new matrix(Layout[i+1], Layout[i], w);
-    weight.push_back(new_weight);
+    Weights.push_back(new_weight);
   }
   Init_para();
-  show_info();
+  ShowInfo (false);
 }
 
-void FullyConnectedNetwork::show_info()
+/**
+  Show detailed information of the fully connected network.
+  Information includes number of layers, number of nodes in input and output layers, layout of the network,
+  and detailed weights of each layer (optional).
+
+  @param  ShowWeightsDetail  A boolean indicating whether to show detailed weights of each layer.
+
+**/
+void FullyConnectedNetwork::ShowInfo (
+  bool  ShowWeightsDetail
+  )
 {
-  int foreNodes, backNodes;
-  int midlayers=weight.size();
-  for(int i=0;i<midlayers;i++)
-  {
-    //foreNodes: weight matrix's column; backNodes: weight matrix's row
-    backNodes=weight[i]->getrow();
-    foreNodes=weight[i]->getcolumn();
-    cout<<"layer "<<i+1<<": "<<foreNodes<<"x"<<backNodes<<endl;
-    weight[i]->show();
+  int WeightRow, WeightColumn;
+  int MiddleLayers = Weights.size();
+
+  cout << "===== Fully Connected Network Info =====" << endl;
+  cout << "Number of layers: " << Layout.size() << endl;
+  cout << "Nodes in input layer: " << Layout[0] << endl;
+  cout << "Nodes in output layer: " << Layout.back() << endl;
+
+  cout << "Layout of the network: ";
+  for (int Index = 0; Index < (int)Layout.size(); Index++) {
+    cout << Layout[Index];
+    if (Index != (int)Layout.size() - 1) {
+      cout << " -> ";
+    }
+  }
+  cout << endl;
+
+  cout << "Detail of weights:" << endl;
+  for(int Index = 0; Index < MiddleLayers; Index++) {
+    //
+    // Weight matrix between layer Index + 1 and layer Index + 2 will be a row * column matrix,
+    // where row = number of nodes in layer Index + 2, column = number of nodes in layer Index + 1.
+    // The weight matrix format will be shown as,
+    //   Weight (L{Index + 1} <-> L{Index + 2}) = row * column
+    //
+    WeightRow    = Weights[Index]->getrow();
+    WeightColumn = Weights[Index]->getcolumn();
+
+    cout<<"  Weight (L" << Index + 1 << " <-> L" << Index + 2 << ") = " << WeightRow << " * " << WeightColumn << endl;
+    if (ShowWeightsDetail) {
+      Weights[Index]->show();
+    }
   }
 }
 
@@ -83,7 +131,7 @@ void FullyConnectedNetwork::test_Init()
   fs>>No;
   for(int i=0;i<No;i++)
   {
-    w=weight[i];
+    w=Weights[i];
     row=w->getrow();
     column=w->getcolumn();
     for(int j=0;j<row;j++)
@@ -98,35 +146,75 @@ void FullyConnectedNetwork::test_Init()
   }
 }
 
-void FullyConnectedNetwork::network_rand_Init()
+/**
+  Initialize weight matrix between each layers based on Layout.
+
+**/
+void FullyConnectedNetwork::WeightsMatrixInit (
+  bool  RandomizeWeights
+  )
 {
-  matrix *w;
-  int midlayers=weight.size();
-  int row, column;
-  double x;
-  for(int i=0;i<midlayers;i++)
-  {
-    w=weight[i];
-    row=w->getrow();
-    column=w->getcolumn();
-    for(int j=0;j<row;j++)
-    {
-      for(int k=0;k<column;k++)
-      {
-        x=rand_value();
-        w->SetValue(j, k, x);
+  matrix *Weight;
+
+  //
+  // Create weight matrix between each layers according to Layout.
+  // Each weight matrix is Row(next layer's node number) * Column(current layer's node number).
+  //
+  for(int Index = 0; Index < (int)Layout.size() - 1; Index++) {
+    DEBUG_LOG (Layout[Index + 1] << ' ' << Layout[Index]);
+
+    Weight = new matrix(Layout[Index + 1], Layout[Index]);
+    Weights.push_back(Weight);
+  }
+
+  if (RandomizeWeights) {
+    FullyConnectedNetwork::WeightsRandomize();
+  }
+}
+
+/**
+  Initialize weights of the network randomly with values between -1.0 and 1.0.
+
+**/
+void FullyConnectedNetwork::WeightsRandomize ()
+{
+  matrix *Weight;
+  int MiddleLayers = Weights.size();
+  int Row, Column;
+  double RandNum;
+
+  for(int Index = 0; Index < MiddleLayers; Index++) {
+    Weight = Weights[Index];
+    Row    = Weight->getrow();
+    Column = Weight->getcolumn();
+
+    for(int RowIdx = 0; RowIdx < Row; RowIdx++) {
+      for(int ColumnIdx = 0; ColumnIdx < Column; ColumnIdx++) {
+        RandNum = RandValue();
+        Weight->SetValue(RowIdx, ColumnIdx, RandNum);
       }
     }
   }
 }
 
-double FullyConnectedNetwork::rand_value()
+/**
+  Generate a random double value between -1.00 and 1.00.
+
+  @return A random double value between -1.00 and 1.00.
+
+**/
+double FullyConnectedNetwork::RandValue()
 {
-  double value, sign;
-  value = (double)(rand()%10 + 1)/10;
-  sign = rand()%2;
-  if(sign==1) value*=(-1);
-  return value;
+  double Value;
+  bool Sign;
+
+  //
+  // Randomly generate a value be 0.00 to 1.00, then randomly assign a sign.
+  //
+  Value = (double)(rand() % 101) / 100.0;
+  Sign  = (bool)(rand() % 2);
+
+  return (Sign ? (-1.0) * Value : Value);
 }
 
 void FullyConnectedNetwork::Init_para()
@@ -155,13 +243,13 @@ void FullyConnectedNetwork::shake()
 {
   cout<<"*shake!*"<<endl;
   int row,column;
-  for(int i=0;i<(int)weight.size();i++)
+  for(int i=0;i<(int)Weights.size();i++)
   {
-    row=weight[i]->getrow();
-    column=weight[i]->getcolumn();
+    row=Weights[i]->getrow();
+    column=Weights[i]->getcolumn();
     vector<double> add_in_num(row*column,0.2);
     matrix add_in(row, column, add_in_num);
-    (*weight[i])=add(*weight[i], add_in);
+    (*Weights[i])=add(*Weights[i], add_in);
   }
   //show_info();
 }
@@ -171,18 +259,6 @@ matrix FullyConnectedNetwork::test(matrix &input)
   Learning_FP(*this, input);
   matrix output(a.back().size(),1,a.back());
   return output;
-}
-
-void FullyConnectedNetwork::weight_Init()
-{
-  for(int i=0;i<(int)Layout.size()-1;i++)
-  {
-    matrix *new_weight = new matrix(Layout[i+1], Layout[i]);
-    cout<<Layout[i]<<' '<<Layout[i+1]<<endl;
-    weight.push_back(new_weight);
-  }
-  //network_rand_Init();
-  test_Init();
 }
 
 void FullyConnectedNetwork::save_network()
@@ -209,22 +285,22 @@ void FullyConnectedNetwork::save_network()
   fs<<endl;
   
   //write weight
-  for(int i=0;i<(int)weight.size();i++)
+  for(int i=0;i<(int)Weights.size();i++)
   {
-    save_weight_to_file(fs, *weight[i]);
+    save_weight_to_file(fs, *Weights[i]);
   }
   fs.close();
 }
 
-void save_weight_to_file(fstream &fs, matrix &weight)
+void save_weight_to_file(fstream &fs, matrix &Weights)
 {
-  int row = weight.getrow();
-  int column = weight.getcolumn();
+  int row = Weights.getrow();
+  int column = Weights.getcolumn();
   for(int i=0;i<row;i++)
   {
     for(int j=0;j<column;j++)
     {
-      fs<<weight.GetValue(i,j)<<',';
+      fs<<Weights.GetValue(i,j)<<',';
     }
   }
   fs<<endl;
@@ -252,4 +328,18 @@ void FullyConnectedNetwork::print_delta()
     }
     cout<<endl;
   }
+}
+
+/**
+
+**/
+void
+FullyConnectedNetwork::ImportNetwork (
+  char *filename
+  )
+{
+  //
+  // TODO: Implement this function.
+  //
+  return;
 }
