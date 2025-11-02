@@ -287,23 +287,9 @@ void FullyConnectedNetwork::save_network()
   //write weight
   for(int i=0;i<(int)Weights.size();i++)
   {
-    save_weight_to_file(fs, *Weights[i]);
+    WriteWeightMatrixToFile(fs, *Weights[i]);
   }
   fs.close();
-}
-
-void save_weight_to_file(fstream &fs, matrix &Weights)
-{
-  int row = Weights.getrow();
-  int column = Weights.getcolumn();
-  for(int i=0;i<row;i++)
-  {
-    for(int j=0;j<column;j++)
-    {
-      fs<<Weights.GetValue(i,j)<<',';
-    }
-  }
-  fs<<endl;
 }
 
 void FullyConnectedNetwork::print_a()
@@ -328,18 +314,4 @@ void FullyConnectedNetwork::print_delta()
     }
     cout<<endl;
   }
-}
-
-/**
-
-**/
-void
-FullyConnectedNetwork::ImportNetwork (
-  char *filename
-  )
-{
-  //
-  // TODO: Implement this function.
-  //
-  return;
 }

@@ -1,17 +1,21 @@
-#ifndef NETWORK_H
-#define NETWORK_H
+#ifndef _FULLY_CONNECTED_NETWORK_H
+#define _FULLY_CONNECTED_NETWORK_H
 
 #include "matrix.h"
-#include "bp.h"
+// #include "bp.h"
 
+#include <string>
 #include <vector>
 #include <fstream>
+#include <cstdint>
 
 class FullyConnectedNetwork
 {
   public:
     FullyConnectedNetwork(std::vector<int> &);
-    FullyConnectedNetwork(char*);
+    FullyConnectedNetwork(char *);
+    void ExportToFile(std::string); // Export the network to a file.
+    void ImportFromFile(std::string); // Import a network from a file.
     void ShowInfo(bool);
     //void Learning_FP(matrix);
     void set_a(int, int, double);
@@ -33,7 +37,6 @@ class FullyConnectedNetwork
     void test_Init();//Initialize to testing mode
     double RandValue(); // Generate a random double value between -1.0 and 1.0.
     void WeightsMatrixInit(bool);// Initialize weight matrix between each layers based on Layout
-    void ImportNetwork (char *); // Import a network from a file.
 
     std::vector< std::vector<double> > a;
     std::vector< std::vector<double> > delta;
@@ -42,19 +45,21 @@ class FullyConnectedNetwork
 };
 
 typedef struct {
-  unsigned int Signature;
-  unsigned int HdrSize;     // Size of the file header in bytes (From Signature to the end of Layout)
-  unsigned int NumOfLayers;
-  // unsigned int Layout[NumOfLayers];
+  u_int32_t Signature;
+  u_int32_t HdrSize;     // Size of the file header in bytes (From Signature to the end of Layout)
+  u_int32_t NumOfLayers;
+  u_int32_t Layout[1];  // variable length(NumOfLayers) array
   // double Weights[Layout[0] * Layout[1]];
   // ...
   // double Weights[Layout[NumOfLayers-2] * Layout[NumOfLayers-1]];
-} NetworkFile;
+} NETWORK_FILE;
+
+#define NETWORK_FILE_SIGNATURE 0x46434E57  // "FCNW" in ASCII
 
 //
 // Internal helper functions
 //
-void save_weight_to_file(std::fstream &, matrix &);
+void WriteWeightMatrixToFile (std::fstream &, matrix &);
 
 //Batch Mode
 std::vector<matrix> BatchMode_sum(std::vector<matrix> &, std::vector<matrix> &);
