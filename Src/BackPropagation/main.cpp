@@ -135,22 +135,22 @@ int main()
 }
 */
 
-double predict(vector< vector<double> > &In, vector< vector<double> > &Out, int start, int amount, FullyConnectedNetwork &N1, vector<int> &training_cat)
-{
-  int correct=0;
-  //for(int i=start+1;i<start+amount;i++)
-  for(int i=start+amount-1;i>=0;i--)
-  {
-    matrix test_input((int)In[i].size(),1,In[i]);
-    //DumpMNISTImage (test_input);
-    matrix ANS = N1.test(test_input);
-    vector<double> ANS_vec = ANS.ConvertToVector ();
-    int ans = ConvertOutputVectorToValue (ANS_vec, training_cat);
-    //cout<<"ANS: "<<ans<<endl;
-    if(ans==Out[i][0]) correct++;
-  }
-  return (double)correct/amount;
-}
+// double predict(vector< vector<double> > &In, vector< vector<double> > &Out, int start, int amount, FullyConnectedNetwork &N1, vector<int> &training_cat)
+// {
+//   int correct=0;
+//   //for(int i=start+1;i<start+amount;i++)
+//   for(int i=start+amount-1;i>=0;i--)
+//   {
+//     matrix test_input((int)In[i].size(),1,In[i]);
+//     //DumpMNISTImage (test_input);
+//     matrix ANS = N1.test(test_input);
+//     vector<double> ANS_vec = ANS.ConvertToVector ();
+//     int ans = ConvertOutputVectorToValue (ANS_vec, training_cat);
+//     //cout<<"ANS: "<<ans<<endl;
+//     if(ans==Out[i][0]) correct++;
+//   }
+//   return (double)correct/amount;
+// }
 
 /*
 int main()
@@ -311,7 +311,7 @@ int main()
       loss/=(double)loss_s.size();
       //cout<<"average:"<<loss<<endl;
       cout<<"Epoch "<<epoch++<<": "<<"loss="<<loss<<"  "<<(double)(t_end-t_start)/CLOCKS_PER_SEC<<"sec";
-      cout<<" accuracy: "<<predict(In, Out, test_images, train_images, N1, training_cat)<<endl;
+      //cout<<" accuracy: "<<predict(In, Out, test_images, train_images, N1, training_cat)<<endl;
       //store loss of last 15 epoch
       if(last_15.size()<last_save) {last_15.push_back(loss); continue;}
       else
@@ -353,7 +353,7 @@ int main()
       //PAUSE
     
     }
-    N1.save_network();
+    N1.ExportToFile(".", "");
   }
   return 0;
 }

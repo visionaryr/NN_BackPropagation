@@ -27,6 +27,7 @@ FullyConnectedNetwork::FullyConnectedNetwork (
   Layout = NetworkFrame;
 
   WeightsMatrixInit(true);
+  InitNodeValue ();
   Init_para();
   ShowInfo (false);
 }
@@ -35,42 +36,15 @@ FullyConnectedNetwork::FullyConnectedNetwork (
   Constructor to initialize a fully connected network with given filename which contains all weights of each layer.
   The detail information of the network will be shown after initialization.
 
-  @param  filename  A character pointer representing the name of the file containing network weights.
+  @param  filename  A string representing the name of the file containing a FCN.
 
 **/
-FullyConnectedNetwork::FullyConnectedNetwork(char *filename)
+FullyConnectedNetwork::FullyConnectedNetwork(string filename)
 {
-  fstream inFile(filename, ios::in);
-  if(!inFile) {
-    cerr<<"File opening error!"<<endl;
-    exit(1);
-  }
+  ImportFromFile (filename);
 
-  string line, token;  
-  getline(inFile, line);
-  istringstream delim(line);
-  while (getline(delim, token, ','))        
-    {
-        Layout.push_back(stoi(token));                                          
-    }
-    
-  size_t offset;//offset
-  double ww;
-  for(int i=0;i<(int)Layout.size()-1;i++)
-  {
-    getline(inFile, line);
-    
-    istringstream delim(line);
-    vector<double> w;
-    while(getline(delim, token, ','))
-    {
-      ww = stod(token, &offset);
-      w.push_back(ww);
-    }
-    matrix *new_weight = new matrix(Layout[i+1], Layout[i], w);
-    Weights.push_back(new_weight);
-  }
-  Init_para();
+  InitNodeValue ();
+
   ShowInfo (false);
 }
 
@@ -111,38 +85,13 @@ void FullyConnectedNetwork::ShowInfo (
     // The weight matrix format will be shown as,
     //   Weight (L{Index + 1} <-> L{Index + 2}) = row * column
     //
-    WeightRow    = Weights[Index]->getrow();
-    WeightColumn = Weights[Index]->getcolumn();
+    WeightRow    = Weights[Index].getrow();
+    WeightColumn = Weights[Index].getcolumn();
 
     cout<<"  Weight (L" << Index + 1 << " <-> L" << Index + 2 << ") = " << WeightRow << " * " << WeightColumn << endl;
     if (ShowWeightsDetail) {
-      Weights[Index]->show();
+      Weights[Index].show();
     }
-  }
-}
-
-void FullyConnectedNetwork::test_Init()
-{
-  fstream fs("weight.txt",ios::in);
-  if(!fs) { cerr<<"File error"<<endl; exit(1);}
-  int No, row, column;
-  double x;
-  matrix *w;
-  fs>>No;
-  for(int i=0;i<No;i++)
-  {
-    w=Weights[i];
-    row=w->getrow();
-    column=w->getcolumn();
-    for(int j=0;j<row;j++)
-    {
-      for(int k=0;k<column;k++)
-      {
-        fs>>x;
-        w->SetValue(j, k, x);
-      }
-    }
-    
   }
 }
 
@@ -154,16 +103,15 @@ void FullyConnectedNetwork::WeightsMatrixInit (
   bool  RandomizeWeights
   )
 {
-  matrix *Weight;
-
   //
   // Create weight matrix between each layers according to Layout.
   // Each weight matrix is Row(next layer's node number) * Column(current layer's node number).
   //
+  DEBUG_LOG ("Initialize weight matrix between each layers...");
   for(int Index = 0; Index < (int)Layout.size() - 1; Index++) {
     DEBUG_LOG (Layout[Index + 1] << ' ' << Layout[Index]);
 
-    Weight = new matrix(Layout[Index + 1], Layout[Index]);
+    matrix  Weight(Layout[Index + 1], Layout[Index]);
     Weights.push_back(Weight);
   }
 
@@ -178,20 +126,18 @@ void FullyConnectedNetwork::WeightsMatrixInit (
 **/
 void FullyConnectedNetwork::WeightsRandomize ()
 {
-  matrix *Weight;
   int MiddleLayers = Weights.size();
   int Row, Column;
   double RandNum;
 
   for(int Index = 0; Index < MiddleLayers; Index++) {
-    Weight = Weights[Index];
-    Row    = Weight->getrow();
-    Column = Weight->getcolumn();
+    Row    = Weights[Index].getrow();
+    Column = Weights[Index].getcolumn();
 
     for(int RowIdx = 0; RowIdx < Row; RowIdx++) {
       for(int ColumnIdx = 0; ColumnIdx < Column; ColumnIdx++) {
         RandNum = RandValue();
-        Weight->SetValue(RowIdx, ColumnIdx, RandNum);
+        Weights[Index].SetValue(RowIdx, ColumnIdx, RandNum);
       }
     }
   }
@@ -217,21 +163,43 @@ double FullyConnectedNetwork::RandValue()
   return (Sign ? (-1.0) * Value : Value);
 }
 
+void
+FullyConnectedNetwork::InitNodeValue()
+{
+  for(int Index = 0; Index < (int)Layout.size(); Index++) {
+    matrix LayerNodes(Layout[Index],1);
+    NodeValue.push_back(LayerNodes);
+  }
+}
+
 void FullyConnectedNetwork::Init_para()
 {
   vector<double> temp;
   for(int i=0;i<(int)Layout.size();i++)
   {
     temp.assign(Layout[i],0);
-    a.push_back(temp);
     delta.push_back(temp);
   }
 }
 
 
-void FullyConnectedNetwork::set_a(int layer, int num, double value)
+void
+FullyConnectedNetwork::SetNodeValue (
+  unsigned int  Layer,
+  unsigned int  Number,
+  double        Value
+  )
 {
-  a[layer][num]=value;
+  if (Layer >= (unsigned int)Layout.size()) {
+    DEBUG_LOG ("Layer: " << Layer << ", Layout size: " << Layout.size());
+    throw std::runtime_error("Error: Layer index out of range in SetNodeValue().");
+  }
+  if (Number >= (unsigned int)Layout[Layer]) {
+    DEBUG_LOG ("Number: " << Number << ", Nodes in layer: " << Layout[Layer]);
+    throw std::runtime_error("Error: Node number index out of range in SetNodeValue().");
+  }
+
+  NodeValue[Layer].SetValue (Number, 0, Value);
 }
 
 void FullyConnectedNetwork::set_delta(int layer, int num, double value)
@@ -245,63 +213,33 @@ void FullyConnectedNetwork::shake()
   int row,column;
   for(int i=0;i<(int)Weights.size();i++)
   {
-    row=Weights[i]->getrow();
-    column=Weights[i]->getcolumn();
+    row=Weights[i].getrow();
+    column=Weights[i].getcolumn();
     vector<double> add_in_num(row*column,0.2);
     matrix add_in(row, column, add_in_num);
-    (*Weights[i])=add(*Weights[i], add_in);
+    (Weights[i])=add(Weights[i], add_in);
   }
   //show_info();
 }
 
-matrix FullyConnectedNetwork::test(matrix &input)
-{
-  Learning_FP(*this, input);
-  matrix output(a.back().size(),1,a.back());
-  return output;
-}
+// matrix FullyConnectedNetwork::test(matrix &input)
+// {
+//   Learning_FP(*this, input);
+//   matrix output(a.back().size(),1,a.back());
+//   return output;
+// }
 
-void FullyConnectedNetwork::save_network()
+void FullyConnectedNetwork::PrintNodesInLayer (
+  unsigned int  Layer
+  )
 {
-  string filename("");
-  for(int i=0;i<(int)Layout.size();i++)
-  {
-    filename+=to_string(Layout[i]);
-    if(i!=(int)Layout.size()-1) filename+="_";
-    else filename+=".txt";
+  if (Layer >= (unsigned int)Layout.size()) {
+    DEBUG_LOG ("Layer: " << Layer << ", Layout size: " << Layout.size());
+    throw std::runtime_error("Error: Layer index out of range in PrintNodesInLayer().");
   }
-  cout<<filename<<endl;
-  fstream fs(filename, ios::out);
-  if(!fs)
-  {
-    cerr<<"file opening error!"<<endl;
-    exit(1);
-  }
-  //write Layout
-  for(int i=0;i<(int)Layout.size();i++)
-  {
-    fs<<Layout[i]<<',';
-  }
-  fs<<endl;
-  
-  //write weight
-  for(int i=0;i<(int)Weights.size();i++)
-  {
-    WriteWeightMatrixToFile(fs, *Weights[i]);
-  }
-  fs.close();
-}
 
-void FullyConnectedNetwork::print_a()
-{
-  for(int i=0;i<(int)a.size();i++)
-  {
-    for(int j=0;j<(int)a[i].size();j++)
-    {
-      cout<<a[i][j]<<' ';
-    }
-    cout<<endl;
-  }
+  cout << "Nodes in layer" << Layer << ":" << endl;
+  NodeValue[Layer].show();
 }
 
 void FullyConnectedNetwork::print_delta()

@@ -37,16 +37,20 @@ WriteWeightMatrixToFile (
 **/
 void
 FullyConnectedNetwork::ExportToFile (
-  string  Filename
+  string  FilePath,
+  string  FileName
   )
 {
   fstream       fs;
   NETWORK_FILE  *FileHeader;
   unsigned int  HdrSize;
+  string        FullFileName;
 
-  fs.open (Filename, ios::out | ios::binary);
+  FullFileName = FilePath + "/" + (FileName.empty() ? "FCN_Network.dat" : FileName);
+
+  fs.open (FullFileName, ios::out | ios::binary);
   if (!fs) {
-    DEBUG_LOG ("Failed to open file: " << Filename << " in binary write mode");
+    DEBUG_LOG ("Failed to open file: " << FullFileName << " in binary write mode");
     throw std::runtime_error("ExportToFile: File opening error");
   }
 
@@ -73,7 +77,7 @@ FullyConnectedNetwork::ExportToFile (
   // Write weights of each layers.
   //
   for (int Index = 0; Index < (int)Weights.size(); Index++) {
-    WriteWeightMatrixToFile (fs, *Weights[Index]);
+    WriteWeightMatrixToFile (fs, Weights[Index]);
   }
 
   fs.close ();
@@ -174,15 +178,14 @@ FullyConnectedNetwork::ImportFromFile (
   // Read weights of each layers.
   //
   for (int Index = 0; Index < (int)Weights.size(); Index++) {
-    matrix  *Weight = Weights[Index];
     double   Value;
-    int      Row    = Weight->getrow();
-    int      Column = Weight->getcolumn();
+    int      Row    = Weights[Index].getrow();
+    int      Column = Weights[Index].getcolumn();
 
     for (int RowIdx = 0; RowIdx < Row; RowIdx++) {
       for (int ColumnIdx = 0; ColumnIdx < Column; ColumnIdx++) {
         fs.read (reinterpret_cast<char *>(&Value), sizeof(double));
-        Weight->SetValue(RowIdx, ColumnIdx, Value);
+        Weights[Index].SetValue(RowIdx, ColumnIdx, Value);
       }
     }
   }
