@@ -17,13 +17,15 @@ class FullyConnectedNetwork
     void ExportToFile(std::string, std::string); // Export the network to a file.
     void ImportFromFile(std::string); // Import a network from a file.
     void ShowInfo(bool);
-    //void Learning_FP(matrix);
-    void SetNodeValue(unsigned int, unsigned int, double);
-    void set_delta(int, int, double);
-    void shake();
-    matrix test(matrix &);
-    void PrintNodesInLayer(unsigned int);
+    void SetNodeActivation (unsigned int, unsigned int, double);
+    matrix GetActivationByLayer (unsigned int) const;
+    void PrintActivationInLayer (unsigned int);
+    matrix GetWeightByLayer (unsigned int) const;
+    void UpdateWeightByLayer (unsigned int, const matrix &);
+    void PerturbWeight ();
+    void SetNodeDelta(unsigned int, unsigned int, double);
     void print_delta();
+
     friend void Learning_FP(FullyConnectedNetwork &, matrix);
     friend void delta_calc(FullyConnectedNetwork &, matrix);
     friend std::vector<matrix> delta_w_calc(FullyConnectedNetwork &, double);
@@ -31,8 +33,8 @@ class FullyConnectedNetwork
     friend double loss_func(FullyConnectedNetwork &, matrix &);
 
   private:
-    void InitNodeValue ();
-    void Init_para();
+    void InitNodeActivation ();
+    void InitNodeDelta ();
     void WeightsRandomize();
     double RandValue(); // Generate a random double value between -1.0 and 1.0.
     void WeightsMatrixInit(bool);// Initialize weight matrix between each layers based on Layout
@@ -40,8 +42,8 @@ class FullyConnectedNetwork
     //
     // Data Members
     //
-    std::vector<matrix> NodeValue;
-    std::vector< std::vector<double> > delta;
+    std::vector<matrix> NodeActivation;
+    std::vector<matrix> NodeDelta;
     std::vector<matrix> Weights;
     std::vector<int> Layout;
 };

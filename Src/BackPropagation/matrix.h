@@ -10,6 +10,7 @@ class matrix
   public:
     matrix();    
     matrix(int, int);
+    matrix(int, int, double);
     matrix(int, int, std::vector<double>);
     void show() const;
     void test_show() const;
@@ -28,9 +29,8 @@ class matrix
     int row;
     int column;
     std::vector< std::vector<double> > Matrix;
-    void InitZeroMatrix(int, int);
+    void InitMatrixWithValue(int, int, double);
     int SetMatrix(int, int, std::vector<double>);
-
 };
 
 //matrix calculating functions(in matrix_calculate.cpp)

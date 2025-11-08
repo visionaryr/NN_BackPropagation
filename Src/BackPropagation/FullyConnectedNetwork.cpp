@@ -27,8 +27,8 @@ FullyConnectedNetwork::FullyConnectedNetwork (
   Layout = NetworkFrame;
 
   WeightsMatrixInit(true);
-  InitNodeValue ();
-  Init_para();
+  InitNodeActivation ();
+  InitNodeDelta ();
   ShowInfo (false);
 }
 
@@ -43,7 +43,8 @@ FullyConnectedNetwork::FullyConnectedNetwork(string filename)
 {
   ImportFromFile (filename);
 
-  InitNodeValue ();
+  InitNodeActivation ();
+  InitNodeDelta ();
 
   ShowInfo (false);
 }
@@ -163,28 +164,44 @@ double FullyConnectedNetwork::RandValue()
   return (Sign ? (-1.0) * Value : Value);
 }
 
+/**
+  Initialize node values of each layer to zero.
+
+**/
 void
-FullyConnectedNetwork::InitNodeValue()
+FullyConnectedNetwork::InitNodeActivation ()
 {
   for(int Index = 0; Index < (int)Layout.size(); Index++) {
     matrix LayerNodes(Layout[Index],1);
-    NodeValue.push_back(LayerNodes);
+    NodeActivation.push_back(LayerNodes);
   }
 }
 
-void FullyConnectedNetwork::Init_para()
-{
-  vector<double> temp;
-  for(int i=0;i<(int)Layout.size();i++)
-  {
-    temp.assign(Layout[i],0);
-    delta.push_back(temp);
-  }
-}
+/**
+  Initialize delta values of each layer to zero.
 
-
+**/
 void
-FullyConnectedNetwork::SetNodeValue (
+FullyConnectedNetwork::InitNodeDelta ()
+{
+  for(int Index = 0; Index < (int)Layout.size(); Index++) {
+    matrix LayerDelta(Layout[Index],1);
+    NodeActivation.push_back(LayerDelta);
+  }
+}
+
+/**
+  Set the value of a specific node in a specific layer.
+
+  @param  Layer   An unsigned integer representing the layer index.
+  @param  Number  An unsigned integer representing the node index within the layer.
+  @param  Value   A double representing the value to be set for the specified node.
+
+  @throw std::runtime_error if the Layer or Number index is out of range.
+
+**/
+void
+FullyConnectedNetwork::SetNodeActivation (
   unsigned int  Layer,
   unsigned int  Number,
   double        Value
@@ -199,37 +216,80 @@ FullyConnectedNetwork::SetNodeValue (
     throw std::runtime_error("Error: Node number index out of range in SetNodeValue().");
   }
 
-  NodeValue[Layer].SetValue (Number, 0, Value);
+  NodeActivation[Layer].SetValue (Number, 0, Value);
 }
 
-void FullyConnectedNetwork::set_delta(int layer, int num, double value)
-{
-  delta[layer][num]=value;
-}
+/**
+  Get the activation matrix of a specific layer.
 
-void FullyConnectedNetwork::shake()
+  @param  Layer  An unsigned integer representing the layer index.
+
+  @return A matrix representing the activation values of the specified layer.
+
+  @throw std::runtime_error if the Layer index is out of range.
+
+**/
+matrix
+FullyConnectedNetwork::GetActivationByLayer (
+  unsigned int  Layer
+  ) const
 {
-  cout<<"*shake!*"<<endl;
-  int row,column;
-  for(int i=0;i<(int)Weights.size();i++)
-  {
-    row=Weights[i].getrow();
-    column=Weights[i].getcolumn();
-    vector<double> add_in_num(row*column,0.2);
-    matrix add_in(row, column, add_in_num);
-    (Weights[i])=add(Weights[i], add_in);
+  if (Layer >= (unsigned int)Layout.size()) {
+    DEBUG_LOG ("Layer: " << Layer << ", Layout size: " << Layout.size());
+    throw std::runtime_error("Error: Layer index out of range in GetNodeActivation().");
   }
-  //show_info();
+
+  return NodeActivation[Layer];
 }
 
-// matrix FullyConnectedNetwork::test(matrix &input)
-// {
-//   Learning_FP(*this, input);
-//   matrix output(a.back().size(),1,a.back());
-//   return output;
-// }
+/**
+  Set the delta value of a specific node in a specific layer.
 
-void FullyConnectedNetwork::PrintNodesInLayer (
+  @param  Layer   An unsigned integer representing the layer index.
+  @param  Number  An unsigned integer representing the node index within the layer.
+  @param  Delta   A double representing the delta value to be set for the specified node.
+
+  @throw std::runtime_error if the Layer or Number index is out of range.
+
+**/
+void FullyConnectedNetwork::SetNodeDelta (
+  unsigned int Layer,
+  unsigned int Number,
+  double       Delta
+  )
+{
+  if (Layer >= (unsigned int)Layout.size()) {
+    DEBUG_LOG ("Layer: " << Layer << ", Layout size: " << Layout.size());
+    throw std::runtime_error("Error: Layer index out of range in SetNodeDelta().");
+  }
+  if (Number >= (unsigned int)Layout[Layer]) {
+    DEBUG_LOG ("Number: " << Number << ", Nodes in layer: " << Layout[Layer]);
+    throw std::runtime_error("Error: Node number index out of range in SetNodeDelta().");
+  }
+
+  NodeDelta[Layer].SetValue (Number, 0, Delta);
+}
+
+/**
+  Perturb weights of the network by adding 0.2 to each weight.
+
+**/
+void FullyConnectedNetwork::PerturbWeight()
+{
+  int Row;
+  int Column;
+
+  DEBUG_LOG ("*SHAKE!!! (Perturb Weights)*");
+
+  for(int Index = 0; Index < (int)Weights.size(); Index++) {
+    Row    = Weights[Index].getrow();
+    Column = Weights[Index].getcolumn();
+    matrix AddIn (Row, Column, 0.2);
+    Weights[Index] = add (Weights[Index], AddIn);
+  }
+}
+
+void FullyConnectedNetwork::PrintActivationInLayer (
   unsigned int  Layer
   )
 {
@@ -239,17 +299,62 @@ void FullyConnectedNetwork::PrintNodesInLayer (
   }
 
   cout << "Nodes in layer" << Layer << ":" << endl;
-  NodeValue[Layer].show();
+  NodeActivation[Layer].show();
 }
 
 void FullyConnectedNetwork::print_delta()
 {
-  for(int i=0;i<(int)delta.size();i++)
+  for(int i=0;i<(int)NodeDelta.size();i++)
   {
-    for(int j=0;j<(int)delta[i].size();j++)
-    {
-      cout<<delta[i][j]<<' ';
-    }
-    cout<<endl;
+    cout<<"Delta in layer "<<i<<":"<<endl;
+    NodeDelta[i].show();
   }
+}
+
+/**
+  Get the weight matrix of a specific layer.
+
+  @param  Layer  An unsigned integer representing the layer index.
+                 Layer index corresponds to the weight matrix between
+                 layer Layer and layer Layer + 1.
+
+  @return A matrix representing the weight values of the specified layer.
+
+  @throw std::runtime_error if the Layer index is out of range.
+**/
+matrix
+FullyConnectedNetwork::GetWeightByLayer (
+  unsigned int  Layer
+  ) const
+{
+  if (Layer >= (unsigned int)Weights.size()) {
+    DEBUG_LOG ("Layer: " << Layer << ", Weights size: " << Weights.size());
+    throw std::runtime_error("Error: Layer index out of range in GetWeightByLayer().");
+  }
+
+  return Weights[Layer];
+}
+
+/**
+  Update the weight matrix of a specific layer.
+
+  @param  Layer      An unsigned integer representing the layer index.
+                     Layer index corresponds to the weight matrix between
+                     layer Layer and layer Layer + 1.
+  @param  NewWeight  A matrix representing the new weight values to be set for the specified layer.
+
+  @throw std::runtime_error if the Layer index is out of range.
+**/
+void
+FullyConnectedNetwork::UpdateWeightByLayer (
+  unsigned int  Layer,
+  const matrix  &NewWeight
+  )
+{
+  if (Layer >= (unsigned int)Weights.size()) {
+    DEBUG_LOG ("Layer: " << Layer << ", Weights size: " << Weights.size());
+    throw std::runtime_error("Error: Layer index out of range in UpdateWeightByLayer().");
+  }
+
+  Weights[Layer] = NewWeight;
 }

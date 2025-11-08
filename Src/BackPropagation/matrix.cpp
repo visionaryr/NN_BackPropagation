@@ -23,7 +23,12 @@ matrix::matrix()
 **/
 matrix::matrix(int Rows, int Columns)
 {
-  InitZeroMatrix(Rows, Columns);
+  InitMatrixWithValue (Rows, Columns, 0.0);
+}
+
+matrix::matrix(int Rows, int Columns, double InitValue)
+{
+  InitMatrixWithValue (Rows, Columns, InitValue);
 }
 
 /**
@@ -124,7 +129,7 @@ int matrix::SetMatrix(int Rows, int Columns, vector<double> SetValues)
     return -1;
   }
 
-  InitZeroMatrix(Rows, Columns);
+  InitMatrixWithValue (Rows, Columns, 0.0);
 
   int counter = 0;
   for(int RowIdx = 0; RowIdx < row; RowIdx++)
@@ -180,14 +185,14 @@ void matrix::SetValue(int Row, int Column, double Value)
 }
 
 /**
-  Initialize a Rows * Columns zero matrix.
+  Initialize a Rows * Columns matrix with specified value.
   Previous values in the matrix will be cleared.
 
   @param  Rows     number of rows
   @param  Columns  number of columns
 
 **/
-void matrix::InitZeroMatrix(int Rows, int Columns)
+void matrix::InitMatrixWithValue(int Rows, int Columns, double InitValue)
 {
   if (Matrix.size () != 0) {
     Matrix.clear ();
@@ -198,7 +203,7 @@ void matrix::InitZeroMatrix(int Rows, int Columns)
 
   for(int RowIdx = 0; RowIdx < row; RowIdx++)
   {
-    vector<double> ARow(column, 0.0);
+    vector<double> ARow(column, InitValue);
     Matrix.push_back(ARow);
   }
 }

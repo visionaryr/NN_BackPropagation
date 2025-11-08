@@ -19,8 +19,11 @@ LDFLAGS = -lpng
 # 2. File Lists and Derived Paths
 # ==============================================================================
 
+# Exclude files list
+EXCLUDE_FILES = $(SRC_DIR)/bp_func.cpp
+
 # Find all source files in the current directory (or $(SRC_DIR))
-SRCS = $(wildcard $(SRC_DIR)/*.cpp)
+SRCS = $(filter-out $(EXCLUDE_FILES), $(wildcard $(SRC_DIR)/*.cpp))
 
 # Map source files to their corresponding object file paths in the OBJ_DIR
 # Example: main.cpp -> obj/main.o

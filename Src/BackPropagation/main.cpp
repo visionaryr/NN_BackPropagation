@@ -341,7 +341,7 @@ int main()
       sd = sqrt(var);
     
       //If stdeva<=.008 =>loss value didn't change a lot, then shake.
-      if(sd<=.001) N1.shake();
+      if(sd<=.001) N1.PerturbWeight();
       /*
       if(epoch)
       {
