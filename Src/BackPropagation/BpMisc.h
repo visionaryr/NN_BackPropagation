@@ -1,7 +1,7 @@
 #ifndef _BACK_PROPAGATION_MISC_H_
 #define _BACK_PROPAGATION_MISC_H_
 
-#include "bp.h"
+#include "BackPropagator.h"
 
 #include <vector>
 

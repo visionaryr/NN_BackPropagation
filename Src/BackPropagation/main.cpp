@@ -1,5 +1,5 @@
 #include "matrix.h"
-#include "bp.h"
+#include "BackPropagator.h"
 #include "FullyConnectedNetwork.h"
 #include "PreProcess.h"
 

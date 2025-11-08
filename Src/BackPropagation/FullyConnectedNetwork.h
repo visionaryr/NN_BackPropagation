@@ -2,6 +2,7 @@
 #define _FULLY_CONNECTED_NETWORK_H
 
 #include "matrix.h"
+#include "Activation.h"
 // #include "bp.h"
 
 #include <string>
@@ -12,19 +13,19 @@
 class FullyConnectedNetwork
 {
   public:
-    FullyConnectedNetwork(std::vector<int> &);
+    FullyConnectedNetwork(std::vector<unsigned int> &);
     FullyConnectedNetwork(std::string);
     void ExportToFile(std::string, std::string); // Export the network to a file.
     void ImportFromFile(std::string); // Import a network from a file.
     void ShowInfo(bool);
+    std::vector<unsigned int> GetLayout () const;
     void SetNodeActivation (unsigned int, unsigned int, double);
     matrix GetActivationByLayer (unsigned int) const;
+    matrix GetDerivativeActivationByLayer (unsigned int);
     void PrintActivationInLayer (unsigned int);
     matrix GetWeightByLayer (unsigned int) const;
     void UpdateWeightByLayer (unsigned int, const matrix &);
     void PerturbWeight ();
-    void SetNodeDelta(unsigned int, unsigned int, double);
-    void print_delta();
 
     friend void Learning_FP(FullyConnectedNetwork &, matrix);
     friend void delta_calc(FullyConnectedNetwork &, matrix);
@@ -34,7 +35,6 @@ class FullyConnectedNetwork
 
   private:
     void InitNodeActivation ();
-    void InitNodeDelta ();
     void WeightsRandomize();
     double RandValue(); // Generate a random double value between -1.0 and 1.0.
     void WeightsMatrixInit(bool);// Initialize weight matrix between each layers based on Layout
@@ -43,9 +43,10 @@ class FullyConnectedNetwork
     // Data Members
     //
     std::vector<matrix> NodeActivation;
-    std::vector<matrix> NodeDelta;
     std::vector<matrix> Weights;
-    std::vector<int> Layout;
+    std::vector<unsigned int> Layout;
+
+    ACTIVATION_TYPE  ActivationType;
 };
 
 typedef struct {

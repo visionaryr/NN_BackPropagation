@@ -1,4 +1,4 @@
-#include "bp.h"
+#include "BackPropagator.h"
 #include "matrix.h"
 #include "FullyConnectedNetwork.h"
 #include <vector>
@@ -6,38 +6,6 @@
 #include <cmath>
 
 using namespace std;
-
-/**
-  The activation function f(x) = 1 / (1 + e^(-x)).
-
-  @param  x   input value.
-
-  @return  The output value after applying the activation function.
-
-**/
-double 
-ActivationFunction (
-  double x
-  )
-{
-  return 1 / (1 + exp((-1) * x));
-}
-
-/**
-  The derivative function f'(x) = x * (1 - x) of activation function f(x) = 1 / (1 + e^(-x)).
-
-  @param  x   input value.
-
-  @return  The output value after applying the derivative activation function.
-
-**/
-double
-ActivationFunctionDerivative (
-  double x
-  )
-{
-  return x * (1 - x);
-}
 
 /**
   Apply the activation function to each element of the input matrix.
@@ -48,15 +16,15 @@ ActivationFunctionDerivative (
            after applying the activation function to each element of the input matrix.
 
 **/
-matrix
-Activation (
-  matrix Input
-  )
-{
-  function<double(double)> Func = ActivationFunction;
+// matrix
+// Activation (
+//   matrix Input
+//   )
+// {
+//   function<double(double)> Func = ActivationFunction;
 
-  return Input.ApplyElementWise (Func);
-}
+//   return Input.ApplyElementWise (Func);
+// }
 
 void Learning_FP(FullyConnectedNetwork &bp, matrix input)
 {
@@ -79,51 +47,6 @@ void Learning_FP(FullyConnectedNetwork &bp, matrix input)
       bp.SetNodeValue(i+1,j,f.GetValue(j,0));
     }
   }
-}
-
-
-void delta_calc(FullyConnectedNetwork &bp, matrix desired_output)
-{
-  int last_layer_num = (int)bp.Layout.size()-1;
-  int last_layer_size = bp.Layout.back();
-  double d_output, delta_temp, a_i;
-  for(int i=0;i<last_layer_size;i++)
-  {
-    a_i=bp.NodeValue[last_layer_num].GetValue(i,0);
-    d_output=desired_output.GetValue(i,0);
-    delta_temp=(d_output - a_i)*a_i*(1-a_i);
-    bp.set_delta(last_layer_num,i,delta_temp);
-  }
-  
-  for(int i=bp.Weights.size()-1;i>0;i--)
-  {
-    matrix weight_T=transpose(bp.Weights[i]);
-    matrix delta_matrix(bp.Layout[i+1], 1, bp.delta[i+1]);
-    matrix x = multiply(weight_T, delta_matrix);
-    vector<double> x_value = x.ConvertToVector();//initialize with x
-    double f_derivative, delta_value;
-    for(int j=0;j<(int)x_value.size();j++)
-    {
-      //cout<<"x: "<<x_value[j]<<endl;
-      f_derivative = ActivationFunctionDerivative (bp.NodeValue[i].GetValue(j,0));
-      //cout<<"f\': "<<f_derivative<<endl;
-      delta_value=x_value[j]*f_derivative;
-      //cout<<"delta: "<<delta_value<<endl;
-      bp.set_delta(i,j,delta_value);
-    }
-  }
-  /*  
-  cout<<"delta"<<endl;
-  for(int i=0;i<3;i++)
-  {
-    for(int j=0;j<(int)bp.delta[i].size();j++)
-    {
-      cout<<bp.delta[i][j]<<' ';
-    }
-    cout<<endl;
-  }
-  */
-  
 }
 
 vector<matrix> delta_w_calc(FullyConnectedNetwork &bp, double learning_rate)

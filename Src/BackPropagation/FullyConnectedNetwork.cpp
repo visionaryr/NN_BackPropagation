@@ -1,4 +1,3 @@
-#include "bp.h"
 #include "matrix.h"
 #include "FullyConnectedNetwork.h"
 #include "DebugLib.h"
@@ -21,14 +20,13 @@ using namespace std;
 
 **/
 FullyConnectedNetwork::FullyConnectedNetwork (
-  vector<int> &NetworkFrame
+  vector<unsigned int> &NetworkFrame
   )
 {
   Layout = NetworkFrame;
 
   WeightsMatrixInit(true);
   InitNodeActivation ();
-  InitNodeDelta ();
   ShowInfo (false);
 }
 
@@ -44,7 +42,6 @@ FullyConnectedNetwork::FullyConnectedNetwork(string filename)
   ImportFromFile (filename);
 
   InitNodeActivation ();
-  InitNodeDelta ();
 
   ShowInfo (false);
 }
@@ -175,19 +172,8 @@ FullyConnectedNetwork::InitNodeActivation ()
     matrix LayerNodes(Layout[Index],1);
     NodeActivation.push_back(LayerNodes);
   }
-}
 
-/**
-  Initialize delta values of each layer to zero.
-
-**/
-void
-FullyConnectedNetwork::InitNodeDelta ()
-{
-  for(int Index = 0; Index < (int)Layout.size(); Index++) {
-    matrix LayerDelta(Layout[Index],1);
-    NodeActivation.push_back(LayerDelta);
-  }
+  ActivationType = SIGMOLD;
 }
 
 /**
@@ -243,31 +229,30 @@ FullyConnectedNetwork::GetActivationByLayer (
 }
 
 /**
-  Set the delta value of a specific node in a specific layer.
+  Get the deriative activation matrix of a specific layer.
 
-  @param  Layer   An unsigned integer representing the layer index.
-  @param  Number  An unsigned integer representing the node index within the layer.
-  @param  Delta   A double representing the delta value to be set for the specified node.
+  @param  Layer  An unsigned integer representing the layer index.
 
-  @throw std::runtime_error if the Layer or Number index is out of range.
+  @return A matrix which applied deriative activation to activation values of the specified layer.
+
+  @throw std::runtime_error if the Layer index is out of range.
 
 **/
-void FullyConnectedNetwork::SetNodeDelta (
-  unsigned int Layer,
-  unsigned int Number,
-  double       Delta
+matrix
+FullyConnectedNetwork::GetDerivativeActivationByLayer (
+  unsigned int  Layer
   )
 {
+  ACTIVATION_FUNC  DeriativeFunction;
+
   if (Layer >= (unsigned int)Layout.size()) {
     DEBUG_LOG ("Layer: " << Layer << ", Layout size: " << Layout.size());
-    throw std::runtime_error("Error: Layer index out of range in SetNodeDelta().");
-  }
-  if (Number >= (unsigned int)Layout[Layer]) {
-    DEBUG_LOG ("Number: " << Number << ", Nodes in layer: " << Layout[Layer]);
-    throw std::runtime_error("Error: Node number index out of range in SetNodeDelta().");
+    throw std::runtime_error("Error: Layer index out of range in GetNodeActivation().");
   }
 
-  NodeDelta[Layer].SetValue (Number, 0, Delta);
+  DeriativeFunction = GetDeriativeActivationFunction (ActivationType);
+
+  return NodeActivation[Layer].ApplyElementWise (DeriativeFunction);
 }
 
 /**
@@ -300,15 +285,6 @@ void FullyConnectedNetwork::PrintActivationInLayer (
 
   cout << "Nodes in layer" << Layer << ":" << endl;
   NodeActivation[Layer].show();
-}
-
-void FullyConnectedNetwork::print_delta()
-{
-  for(int i=0;i<(int)NodeDelta.size();i++)
-  {
-    cout<<"Delta in layer "<<i<<":"<<endl;
-    NodeDelta[i].show();
-  }
 }
 
 /**
@@ -357,4 +333,16 @@ FullyConnectedNetwork::UpdateWeightByLayer (
   }
 
   Weights[Layer] = NewWeight;
+}
+
+/**
+  Get the layout of the fully connected network.
+
+  @return A vector of unsigned integers representing the number of nodes in each layer.
+
+**/
+vector<unsigned int>
+FullyConnectedNetwork::GetLayout () const
+{
+  return Layout;
 }

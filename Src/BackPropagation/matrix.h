@@ -33,11 +33,15 @@ class matrix
     int SetMatrix(int, int, std::vector<double>);
 };
 
-//matrix calculating functions(in matrix_calculate.cpp)
-matrix multiply(matrix &A, matrix &B);
+//
+// matrix calculating functions(in matrix_calculate.cpp)
+//
+matrix multiply(const matrix &A, const matrix &B);
 matrix transpose(const matrix &);
 matrix multiplyBy(const matrix &, double);
 matrix add(const matrix &, const matrix &);
+matrix Substract (const matrix &, const matrix &);
+matrix HadamardProduct (const matrix &, const matrix &);
 
 
 

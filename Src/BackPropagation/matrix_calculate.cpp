@@ -41,7 +41,7 @@ double RowMultiplyColumn (const vector<double> &Row, const vector<double> &Colum
   @return  The result matrix, which is m * p.
 
 **/
-matrix multiply(matrix &A, matrix &B)
+matrix multiply(const matrix &A, const matrix &B)
 {
   int ARows = A.getrow();
   int BRows = B.getrow();
@@ -163,6 +163,70 @@ matrix add(const matrix &A, const matrix &B)
           RowIdx,
           ColumnIdx,
           A.GetValue(RowIdx, ColumnIdx) + B.GetValue(RowIdx, ColumnIdx)
+          );
+    }
+  }
+
+  return C;
+}
+
+/**
+  Substract 2 matrices by C = A - B.
+
+  @param  A  The matrix to be substract, which is m * n.
+  @param  B  The matrix to substract, which is m * n.
+
+  @return  The result matrix, which is m * n.
+
+**/
+matrix Substract(const matrix &A, const matrix &B)
+{
+  if ((A.getrow() != B.getrow()) ||
+      (A.getcolumn() != B.getcolumn())) {
+    cout<<"The size of the two matrices should be the same!"<<endl;
+    exit(1);
+  }
+
+  int Row    = A.getrow();
+  int Column = A.getcolumn();
+
+  matrix C(Row, Column);
+
+  for(int RowIdx = 0; RowIdx < Row; RowIdx++) {
+    for(int ColumnIdx = 0; ColumnIdx < Column; ColumnIdx++) {
+      C.SetValue(
+          RowIdx,
+          ColumnIdx,
+          A.GetValue(RowIdx, ColumnIdx) - B.GetValue(RowIdx, ColumnIdx)
+          );
+    }
+  }
+
+  return C;
+}
+
+matrix  HadamardProduct (
+  const matrix  &A,
+  const matrix  &B
+  )
+{
+  if ((A.getrow() != B.getrow()) ||
+      (A.getcolumn() != B.getcolumn())) {
+    cout<<"The size of the two matrices should be the same!"<<endl;
+    exit(1);
+  }
+
+  int Row    = A.getrow();
+  int Column = A.getcolumn();
+
+  matrix C(Row, Column);
+
+  for(int RowIdx = 0; RowIdx < Row; RowIdx++) {
+    for(int ColumnIdx = 0; ColumnIdx < Column; ColumnIdx++) {
+      C.SetValue(
+          RowIdx,
+          ColumnIdx,
+          A.GetValue(RowIdx, ColumnIdx) * B.GetValue(RowIdx, ColumnIdx)
           );
     }
   }

@@ -12,7 +12,7 @@ OBJ_DIR = obj
 
 # Compiler and Flags
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall -g # -g for debugging info
+CXXFLAGS = -std=c++17 -Wall -g # -g for debugging info
 LDFLAGS = -lpng
 
 # ==============================================================================
