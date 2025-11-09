@@ -17,21 +17,22 @@ class FullyConnectedNetwork
     FullyConnectedNetwork(std::string);
     void ExportToFile(std::string, std::string); // Export the network to a file.
     void ImportFromFile(std::string); // Import a network from a file.
+
     void ShowInfo(bool);
+
     std::vector<unsigned int> GetLayout () const;
+
     void SetNodeActivation (unsigned int, unsigned int, double);
     matrix GetActivationByLayer (unsigned int) const;
     matrix GetDerivativeActivationByLayer (unsigned int);
     void PrintActivationInLayer (unsigned int);
+  
     matrix GetWeightByLayer (unsigned int) const;
-    void UpdateWeightByLayer (unsigned int, const matrix &);
+    void UpdateWeight (unsigned int, const matrix &); // Update by specific layer number.
+    void UpdateWeight (const std::vector<matrix> &); // Update by all layers.
     void PerturbWeight ();
 
-    friend void Learning_FP(FullyConnectedNetwork &, matrix);
-    friend void delta_calc(FullyConnectedNetwork &, matrix);
-    friend std::vector<matrix> delta_w_calc(FullyConnectedNetwork &, double);
-    friend void upgrade_weight(FullyConnectedNetwork &, std::vector<matrix> &);
-    friend double loss_func(FullyConnectedNetwork &, matrix &);
+    void Forward (const matrix &);
 
   private:
     void InitNodeActivation ();

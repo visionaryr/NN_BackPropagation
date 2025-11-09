@@ -13,8 +13,8 @@ BackPropagator::BackPropagator (
   FullyConnectedNetwork &FCN
   ) : Network (FCN)
 {
-  InitNodeDelta ();
-  InitDeltaWeights ();
+  // InitNodeDelta ();
+  // InitDeltaWeights ();
 }
 
 /**

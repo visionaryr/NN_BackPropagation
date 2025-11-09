@@ -1,6 +1,8 @@
 #include "BackPropagator.h"
 #include "DebugLib.h"
 
+#include <cmath>
+
 using namespace std;
 
 /**
@@ -11,7 +13,7 @@ using namespace std;
   @param[in]  DesiredOutput  A matrix representing the desired output values.
 
 **/
-void
+matrix
 BackPropagator::CalculateLastLayerDelta (
   matrix  DesiredOutput
   )
@@ -26,10 +28,10 @@ BackPropagator::CalculateLastLayerDelta (
                  Network.GetActivationByLayer (LastLayerIndex)
                  );
 
-  NodeDelta[LastLayerIndex] = HadamardProduct (
-                                DesiredGap,
-                                Network.GetDerivativeActivationByLayer (LastLayerIndex)
-                              );
+  return HadamardProduct (
+           DesiredGap,
+           Network.GetDerivativeActivationByLayer (LastLayerIndex)
+           );
 }
 
 /**
@@ -40,7 +42,7 @@ BackPropagator::CalculateLastLayerDelta (
   @param[in]  Layer
 
 **/
-void
+matrix
 BackPropagator::CalculateMidLayerDelta (
   unsigned int  Layer
   )
@@ -57,10 +59,10 @@ BackPropagator::CalculateMidLayerDelta (
                     NodeDelta[Layer + 1]
                     );
 
-  NodeDelta[Layer] = HadamardProduct (
-                       WeightedError,
-                       Network.GetDerivativeActivationByLayer (Layer)
-                       );
+  return HadamardProduct (
+           WeightedError,
+           Network.GetDerivativeActivationByLayer (Layer)
+           );
 }
 
 /**
@@ -70,10 +72,15 @@ BackPropagator::CalculateMidLayerDelta (
 
 **/
 void BackPropagator::NodeDeltaCalculation (
-  matrix  DesiredOutput
+  const matrix  &DesiredOutput
   )
 {
-  CalculateLastLayerDelta (DesiredOutput);
+  matrix  NodeDeltaOfLayer;
+
+  NodeDelta.clear();
+
+  NodeDeltaOfLayer = CalculateLastLayerDelta (DesiredOutput);
+  NodeDelta.insert (NodeDelta.begin(), NodeDeltaOfLayer);
 
   //
   // Calculate delta for all nodes in all layer except last layer.
@@ -82,8 +89,17 @@ void BackPropagator::NodeDeltaCalculation (
   for (unsigned int LayerIdx = (unsigned int)(Network.GetLayout().size() - 2);
        LayerIdx > 0;
        LayerIdx--) {
-    CalculateMidLayerDelta (LayerIdx);
+    NodeDeltaOfLayer = CalculateMidLayerDelta (LayerIdx);
+    NodeDelta.insert (NodeDelta.begin(), NodeDeltaOfLayer);
   }
+
+  //
+  // Add NodeDelta matrix for input layer since it's not necessary for use to actually calculate
+  // the node delta for first(input) layer.
+  //
+  matrix  InputLayerNodeDelta(Network.GetLayout().front(), 1);
+
+  NodeDelta.insert (NodeDelta.begin(), InputLayerNodeDelta);
 
   DEBUG_START()
   PrintNodeDelta ();
@@ -135,3 +151,59 @@ BackPropagator::UpdateWeights (
   Network.UpdateWeight (DeltaWeights);
 }
 
+/**
+  Perform the backward pass of back propagation algorithm, which includes following steps:
+  1. Calculate node deltas
+  2. Calculate delta weights
+  3. Update the network weights
+
+  @param[in]  DesiredOutput  A matrix representing the desired output values.
+  @param[in]  LearningRate   A double representing the learning rate for weight updates.
+
+**/
+void
+BackPropagator::BackwardPass (
+  const matrix &DesiredOutput,
+  const double LearningRate
+  )
+{
+  NodeDeltaCalculation (DesiredOutput);
+
+  DeltaWeightsCalculation (LearningRate);
+
+  UpdateWeights ();
+}
+
+double
+InternalSquare (
+  double  x
+  )
+{
+  return pow(x, 2.0);
+}
+
+/**
+  Calculate the loss value of the network based on the desired output.
+  Here we use Mean Square Error(MSE) as the loss function.
+  The formula is: Loss = Sum( (Desired - Actual)^2 ) / N, where N is the number of output nodes.
+
+  @param[in]  DesiredOutput  A matrix representing the desired output values.
+
+  @return A double representing the calculated loss value.
+
+**/
+double
+BackPropagator::LossMeanSquareError (
+  const matrix  &DesiredOutput
+  )
+{
+  matrix                   DesiredGap;
+  function<double(double)> Square = InternalSquare;
+
+  DesiredGap = Substract (
+                 DesiredOutput,
+                 Network.GetActivationByLayer (Network.GetLayout().size() - 1)
+                 );
+
+  return DesiredGap.ApplyElementWise (Square).Sum() / DesiredOutput.getrow();
+}

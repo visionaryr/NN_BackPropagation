@@ -25,19 +25,19 @@ class BackPropagator
     void PrintDeltaWeights (); // Only internal debug use.
 
     void NodeDeltaCalculation (
-      matrix DesiredOutput
+      const matrix &DesiredOutput
      );
-    void  CalculateLastLayerDelta (
+    matrix  CalculateLastLayerDelta (
       matrix  DesiredOutput
       );
-    void  CalculateMidLayerDelta (
+    matrix  CalculateMidLayerDelta (
       unsigned int  Layer
       );
 
     void  DeltaWeightsCalculation (
-      double  LearningRate
+      const double  LearningRate
       );
-    void CalculateUpdateDeltaWeights (
+    void BackwardPass (
       const matrix &DesiredOutput,
       const double LearningRate
       );
@@ -46,7 +46,11 @@ class BackPropagator
       void
       );
 
-    FullyConnectedNetwork          Network;
+    double  LossMeanSquareError (
+      const matrix &DesiredOutput
+      );
+
+    FullyConnectedNetwork          &Network;
     std::vector<matrix>            NodeDelta;
     std::vector<matrix>            DeltaWeights;
 };
@@ -54,15 +58,6 @@ class BackPropagator
 typedef std::vector< double >  IMAGE;
 typedef std::vector< IMAGE >   DATA_SET;
 typedef std::vector< int >     LABELS;
-
-//
-// Internal learning and weight updating functions
-//
-void Learning_FP(FullyConnectedNetwork &, matrix);
-void delta_calc(FullyConnectedNetwork &, matrix desired_output);
-std::vector<matrix> delta_w_calc(FullyConnectedNetwork &, double);
-void upgrade_weight(FullyConnectedNetwork &, std::vector<matrix> &);
-double loss_func(FullyConnectedNetwork &, matrix &);
 
 //read png file
 // bool read_png_file(char *filename, std::vector<double> &);

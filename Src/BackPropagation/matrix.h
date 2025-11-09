@@ -18,6 +18,7 @@ class matrix
     int getcolumn() const;
     double GetValue(int, int) const;
     void SetValue(int, int, double);
+    double Sum () const;
 
     std::vector<double> ConvertToVector();
     std::vector<double> ConvertRowToVector (int) const;

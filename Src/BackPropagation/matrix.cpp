@@ -209,6 +209,28 @@ void matrix::InitMatrixWithValue(int Rows, int Columns, double InitValue)
 }
 
 /**
+  Calculate the sum of all elements in the matrix.
+
+  @return  The sum of all elements.
+
+**/
+double
+matrix::Sum (
+  void
+  ) const
+{
+  double  Sum = 0.0;
+
+  for(unsigned int RowIdx = 0; RowIdx < row; RowIdx++) {
+    for (unsigned int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++) {
+      Sum += Matrix[RowIdx][ColumnIdx];
+    }
+  }
+
+  return Sum;
+}
+
+/**
   Convert the matrix to a 1-D vector in row-major order.
 
   @param  Rows     number of rows

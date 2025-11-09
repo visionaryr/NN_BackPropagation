@@ -369,3 +369,42 @@ FullyConnectedNetwork::GetLayout () const
 {
   return Layout;
 }
+
+/**
+  Perform the forward pass of the fully connected network.
+
+  @param  InputData  A matrix representing the input data to the network.
+
+**/
+void
+FullyConnectedNetwork::Forward (
+  const matrix &InputData
+  )
+{
+  if (InputData.getrow() != Layout[0] || InputData.getcolumn() != 1) {
+    DEBUG_LOG ("InputData size: " << InputData.getrow() << " * " << InputData.getcolumn()
+               << ", Expected size: " << Layout[0] << " * 1");
+    throw runtime_error ("Input data size does not match input layer size.");
+  }
+
+  unsigned int  LayerCount = Layout.size();
+
+  //
+  // Set input layer activation
+  //
+  NodeActivation[0] = InputData;
+
+  //
+  // Forward pass through each layer
+  //
+  for (unsigned int LayerIdx = 0; LayerIdx < LayerCount - 1; LayerIdx++) {
+    matrix  CurrentLayerActivation = GetActivationByLayer (LayerIdx);
+    matrix  CurrentWeights         = GetWeightByLayer (LayerIdx);
+
+    matrix  Z = multiply (CurrentWeights, CurrentLayerActivation);
+
+    ACTIVATION_FUNC  ActivationFunction = GetActivationFunction (ActivationType);
+
+    NodeActivation[LayerIdx + 1] = Z.ApplyElementWise (ActivationFunction);
+  }
+}
