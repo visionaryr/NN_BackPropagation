@@ -22,27 +22,33 @@ class BackPropagator
       double        Delta
       );
     void PrintNodeDelta (); // Only internal debug use.
+    void PrintDeltaWeights (); // Only internal debug use.
 
     void NodeDeltaCalculation (
       matrix DesiredOutput
      );
-    void CalculateUpdateDeltaWeights
-    (
-      const std::vector<matrix> &input_activations,
-      const matrix &desired_output,
-      double learning_rate
-    );
-
     void  CalculateLastLayerDelta (
       matrix  DesiredOutput
       );
     void  CalculateMidLayerDelta (
       unsigned int  Layer
       );
+
+    void  DeltaWeightsCalculation (
+      double  LearningRate
+      );
+    void CalculateUpdateDeltaWeights (
+      const matrix &DesiredOutput,
+      const double LearningRate
+      );
+
+    void  UpdateWeights (
+      void
+      );
+
     FullyConnectedNetwork          Network;
     std::vector<matrix>            NodeDelta;
     std::vector<matrix>            DeltaWeights;
-    std::function<double(double)>  ActivationDerivative;
 };
 
 typedef std::vector< double >  IMAGE;

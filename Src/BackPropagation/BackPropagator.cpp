@@ -3,6 +3,12 @@
 
 using namespace std;
 
+/**
+  Constructor for BackPropagator class.
+
+  @param  FCN   A reference to a FullyConnectedNetwork object to be associated with this BackPropagator.
+
+**/
 BackPropagator::BackPropagator (
   FullyConnectedNetwork &FCN
   ) : Network (FCN)
@@ -56,11 +62,35 @@ void BackPropagator::SetNodeDelta (
   NodeDelta[Layer].SetValue (Number, 0, Delta);
 }
 
-void BackPropagator::PrintNodeDelta()
+/**
+  [**Only for internal debug use**]
+  Print the delta values of all nodes in each layer.
+
+**/
+void
+BackPropagator::PrintNodeDelta(
+  void
+  )
 {
   for(int Index = 0; Index < (int)NodeDelta.size(); Index++) {
     cout << "Delta in layer " << Index<< ":" <<endl;
     NodeDelta[Index].show();
+  }
+}
+
+/**
+  [**Only for internal debug use**]
+  Print the delta weights between each layers.
+
+**/
+void
+BackPropagator::PrintDeltaWeights(
+  void
+  )
+{
+  for(int Index = 0; Index < (int)DeltaWeights.size(); Index++) {
+    cout << "Delta weights between layer" << Index << " and layer " << Index + 1 << endl;
+    DeltaWeights[Index].show();
   }
 }
 

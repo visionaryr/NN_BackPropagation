@@ -89,3 +89,49 @@ void BackPropagator::NodeDeltaCalculation (
   PrintNodeDelta ();
   DEBUG_END()
 }
+
+/**
+  Calculate the delta value of each node in all layers except the first(input) layer.
+
+  @param[in]  DesiredOutput  A matrix representing the desired output values.
+
+**/
+void
+BackPropagator::DeltaWeightsCalculation (
+  double  LearningRate
+  )
+{
+  unsigned int  WeightsLayerCount = ((unsigned int)Network.GetLayout().size() - 1);
+
+  DeltaWeights.clear();
+
+  for (unsigned int LayerIdx = 0; LayerIdx < WeightsLayerCount; LayerIdx++) {
+    matrix  CurrentLayerActivation_T = transpose (Network.GetActivationByLayer (LayerIdx));
+    matrix  NextLayerDelta           = NodeDelta[LayerIdx + 1];
+
+    matrix  Gradient = multiply (NextLayerDelta, CurrentLayerActivation_T);
+  
+    matrix  DeltaWeight = multiplyBy (Gradient, LearningRate);
+
+    DeltaWeights.push_back (DeltaWeight);
+  }
+}
+
+/**
+  Update the weights of the network by applying the calculated delta weights.
+
+**/
+void
+BackPropagator::UpdateWeights (
+  void
+  )
+{
+  if (DeltaWeights.empty () ||
+      (DeltaWeights.size () != Network.GetLayout().size() - 1)) {
+    DEBUG_LOG ("DeltaWeights Size = " << DeltaWeights.size() << " , Network Layout size = " << Network.GetLayout().size());
+    DEBUG_LOG ("Delta Weights are not ready, Failed to update");
+  }
+
+  Network.UpdateWeight (DeltaWeights);
+}
+

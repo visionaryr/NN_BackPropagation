@@ -49,41 +49,6 @@ void Learning_FP(FullyConnectedNetwork &bp, matrix input)
   }
 }
 
-vector<matrix> delta_w_calc(FullyConnectedNetwork &bp, double learning_rate)
-{
-
-  vector<matrix> delta_w;
-  double delta_w_temp;
-  for(int i=0;i<(int)bp.Weights.size();i++)
-  {
-    vector<double> delta_w_value;
-    for(int j=0;j<bp.Layout[i+1];j++)
-    {
-      for(int k=0;k<bp.Layout[i];k++)
-      {
-        delta_w_temp=learning_rate*bp.delta[i+1][j]*bp.NodeValue[i].GetValue (k, 0);
-        //cout<<i<<' '<<j<<' '<<k<<endl;
-        //cout<<bp.delta[i+1][j]<<' '<<bp.a[i][k]<<endl;
-        delta_w_value.push_back(delta_w_temp);
-      }
-      //cout<<endl;
-    }
-    matrix delta_w_layer(bp.Layout[i+1], bp.Layout[i], delta_w_value);
-    delta_w.push_back(delta_w_layer);
-  }
-  return delta_w;
-}
-
-void upgrade_weight(FullyConnectedNetwork &bp, vector<matrix> &delta_w)
-{
-  vector<matrix> new_weight;
-  for(int i=0;i<(int)bp.Weights.size();i++)
-  {
-    bp.Weights[i] = add(bp.Weights[i], delta_w[i]);
-  }
-  //bp.Weights=new_weight;
-}
-
 double loss_func(FullyConnectedNetwork &bp, matrix &desired_output)
 {
   double loss, temp;

@@ -314,17 +314,17 @@ FullyConnectedNetwork::GetWeightByLayer (
 /**
   Update the weight matrix of a specific layer.
 
-  @param  Layer      An unsigned integer representing the layer index.
-                     Layer index corresponds to the weight matrix between
-                     layer Layer and layer Layer + 1.
-  @param  NewWeight  A matrix representing the new weight values to be set for the specified layer.
+  @param  Layer        An unsigned integer representing the layer index.
+                       Layer index corresponds to the weight matrix between
+                       layer Layer and layer Layer + 1.
+  @param  DeltaWeight  A matrix representing the delta weight values to be added to the specified layer.
 
   @throw std::runtime_error if the Layer index is out of range.
 **/
 void
-FullyConnectedNetwork::UpdateWeightByLayer (
+FullyConnectedNetwork::UpdateWeight (
   unsigned int  Layer,
-  const matrix  &NewWeight
+  const matrix  &DeltaWeight
   )
 {
   if (Layer >= (unsigned int)Weights.size()) {
@@ -332,7 +332,30 @@ FullyConnectedNetwork::UpdateWeightByLayer (
     throw std::runtime_error("Error: Layer index out of range in UpdateWeightByLayer().");
   }
 
-  Weights[Layer] = NewWeight;
+  Weights[Layer] = add (Weights[Layer], DeltaWeight);
+}
+
+/**
+  Update the weight matrix of a all layers.
+
+  @param  DeltaWeights  A vector of matrices representing the delta weight values to be added to each layer.
+
+  @throw std::runtime_error  If the number of layers in DeltaWeights and Weights are different.
+
+**/
+void
+FullyConnectedNetwork::UpdateWeight (
+  const vector<matrix>  &DeltaWeights
+  )
+{
+  if (DeltaWeights.size() != Weights.size()) {
+    DEBUG_LOG ("Layer count of DeltaWeights = " << DeltaWeights.size() << " , Weights = " << Weights.size());
+    throw runtime_error ("Layer count of DeltaWeights and Weights are different. Failed to update weight");
+  }
+
+  for (unsigned int LayerIdx = 0; LayerIdx < (unsigned int)Weights.size(); LayerIdx++) {
+    Weights[LayerIdx] = add (Weights[LayerIdx], DeltaWeights[LayerIdx]);
+  }
 }
 
 /**
