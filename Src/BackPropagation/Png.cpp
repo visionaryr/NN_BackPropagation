@@ -2,10 +2,6 @@
 #include <stdio.h>
 #include <png.h>
 #include <vector>
-#include <iostream>
-#include <iomanip>
-#include "matrix.h"
-#include "bp.h"
 
 using namespace std;
 

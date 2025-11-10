@@ -2,6 +2,7 @@
 #include "BackPropagator.h"
 #include "FullyConnectedNetwork.h"
 #include "PreProcess.h"
+#include "PngIo.h"
 
 #include <iostream>
 #include <ctime>

@@ -3,6 +3,7 @@
 
 #include "matrix.h"
 #include "FullyConnectedNetwork.h"
+
 #include <vector>
 #include <functional>
 
@@ -11,7 +12,13 @@ class BackPropagator
   public:
     BackPropagator (FullyConnectedNetwork &FCN);
   
-    //void Train ();
+    void Train (
+      const std::vector<matrix>  &InputData,
+      const std::vector<matrix>  &DesiredOutput,
+      const double               LearningRate,
+      const unsigned int         Epochs,
+      const double               TargetLoss
+      );
 
   private:
     void InitNodeDelta ();
@@ -50,6 +57,18 @@ class BackPropagator
       const matrix &DesiredOutput
       );
 
+    double  TrainOneData (
+      const matrix  &InputData,
+      const matrix  &DesiredOutput,
+      const double  LearningRate
+      );
+
+    double  TrainOneEpoch (
+      const std::vector<matrix>  &InputData,
+      const std::vector<matrix>  &DesiredOutput,
+      const double               LearningRate
+      );
+
     FullyConnectedNetwork          &Network;
     std::vector<matrix>            NodeDelta;
     std::vector<matrix>            DeltaWeights;
@@ -59,14 +78,7 @@ typedef std::vector< double >  IMAGE;
 typedef std::vector< IMAGE >   DATA_SET;
 typedef std::vector< int >     LABELS;
 
-//read png file
-// bool read_png_file(char *filename, std::vector<double> &);
-// void get_png_file(std::vector<double> &, int, int, png_bytep *);
-// void get_test_images(std::vector< std::vector<double> > &);
-// void get_train_images(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector<int> &);
-
 //dataset I/O functions
-int ReverseInt(int);
 void ReadMNIST_and_label(int, int, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector<int> &);
 //void read_Mnist_Label(std::vector< std::vector<double> > &, std::vector<int> &);
 

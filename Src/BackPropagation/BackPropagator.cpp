@@ -107,3 +107,83 @@ void BackPropagator::InitDeltaWeights ()
     DeltaWeights.push_back (LayerDeltaWeights);
   }
 }
+
+double
+BackPropagator::TrainOneData (
+  const matrix  &InputData,
+  const matrix  &DesiredOutput,
+  const double  LearningRate
+  )
+{
+  double  Loss;
+
+  Network.Forward (InputData);
+
+  Loss = LossMeanSquareError (DesiredOutput);
+
+  BackwardPass (DesiredOutput, LearningRate);
+
+  return Loss;
+}
+
+double
+BackPropagator::TrainOneEpoch (
+  const vector<matrix> &InputDataSet,
+  const vector<matrix> &DesiredOutputSet,
+  const double         LearningRate
+  )
+{
+  double  EpochLoss = 0.0;
+
+  for (unsigned int DataIndex = 0; DataIndex < (unsigned int)InputDataSet.size(); DataIndex++) {
+    EpochLoss += TrainOneData (
+                   InputDataSet[DataIndex],
+                   DesiredOutputSet[DataIndex],
+                   LearningRate
+                   );
+  }
+
+  return (double)(EpochLoss / InputDataSet.size());
+}
+
+void
+BackPropagator::Train (
+  const vector<matrix>  &InputDataSet,
+  const vector<matrix>  &DesiredOutputSet,
+  const double          LearningRate,
+  const unsigned int    Epochs,
+  const double          TargetLoss
+  )
+{
+  if (InputDataSet.size() != DesiredOutputSet.size()) {
+    DEBUG_LOG (__FUNCTION__ << ": InputData count = " << InputDataSet.size() << ", DesiredOutput count = " << DesiredOutputSet.size());
+    throw runtime_error ("Amount of InputData and DesiredOutput isn't match.");
+  }
+  if (Epochs == 0) {
+    throw runtime_error ("Epochs should at least be 1.");
+  }
+
+  unsigned int  DataSetCount = (unsigned int)InputDataSet.size();
+  double        EpochLoss;
+
+  for (unsigned int Epoch = 1; Epoch <= Epochs; Epoch++) {
+    EpochLoss = TrainOneEpoch (
+                  InputDataSet,
+                  DesiredOutputSet,
+                  LearningRate
+                  );
+
+    DEBUG_LOG ("Epoch " << Epoch << ": ");
+    DEBUG_LOG ("  Loss = "<< EpochLoss);
+    DEBUG_LOG ("  Consume time = " << (double)(t_end-t_start) / CLOCKS_PER_SEC << " seconds");
+
+    if (EpochLoss < TargetLoss) {
+      DEBUG_LOG ("Loss of this epoch is lower than target loss(" << TargetLoss << ")");
+      break;
+    }
+
+    //
+    // TODO: Preturb(shake) weights if loss between each rounds doesn't have much difference.
+    //
+  }
+}
