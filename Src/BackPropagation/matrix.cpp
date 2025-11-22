@@ -22,12 +22,12 @@ matrix::matrix()
   @param  column  number of columns
 
 **/
-matrix::matrix(int Rows, int Columns)
+matrix::matrix(unsigned int Rows, unsigned int Columns)
 {
   InitMatrixWithValue (Rows, Columns, 0.0);
 }
 
-matrix::matrix(int Rows, int Columns, double InitValue)
+matrix::matrix(unsigned int Rows, unsigned int Columns, double InitValue)
 {
   InitMatrixWithValue (Rows, Columns, InitValue);
 }
@@ -45,7 +45,7 @@ matrix::matrix(int Rows, int Columns, double InitValue)
   @throw  std::invalid_argument  Size of InitValues is not equal to (Rows * Columns).
 
 **/
-matrix::matrix(int Rows, int Columns, vector<double> InitValues)
+matrix::matrix(unsigned int Rows, unsigned int Columns, vector<double> InitValues)
 {
   int ret = SetMatrix (Rows, Columns, InitValues);
 
@@ -196,7 +196,7 @@ matrix::SetValue (
   double Value
   )
 {
- if (Row >= row || Column >= column) {
+  if (Row >= row || Column >= column) {
     throw std::out_of_range("matrix::SetValue: index out of range");
   }
   if (Matrix.size() == 0) {

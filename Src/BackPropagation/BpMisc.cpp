@@ -118,7 +118,12 @@ ConvertOutputValueToMatrix (
   }
 
   matrix DesireOutputMatrix (TrainLabels.size(), 1);
-  DesireOutputMatrix.SetValue (Index, 1, 1.0);
+
+  //
+  // Set value to the field where (Row, Column) = (Index, 0)
+  // *Note: The first one is index 0.
+  //
+  DesireOutputMatrix.SetValue (Index, 0, 1.0);
 
   return DesireOutputMatrix;
 }

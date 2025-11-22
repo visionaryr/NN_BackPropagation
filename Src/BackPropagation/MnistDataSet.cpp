@@ -6,6 +6,11 @@
 
 using namespace std;
 
+#define  ROOT_PATH "/home/rexchen/Desktop/1092_NN/Back_Propagation/"
+
+#define  TRAIN_IMAGES_IDX_FILE  (string)"train-images.idx3-ubyte"
+#define  TRAIN_LABELS_IDX_FILE  (string)"train-labels.idx1-ubyte"
+
 /**
   Convert a 32-bit unsigned integer from big-endian to little-endian format.
 
@@ -171,7 +176,11 @@ ReadMNIST_and_label (
   //
   // Open the image file.
   //
-  ImagesFile = OpenIdxFile ("train-images.idx3-ubyte", 0x00000803, ImagesFileHeader);
+  ImagesFile = OpenIdxFile (
+                 ROOT_PATH + TRAIN_IMAGES_IDX_FILE,
+                 0x00000803,
+                 ImagesFileHeader
+                 );
   if (ImagesFileHeader.size() != 3) {
     throw runtime_error ("Error: Invalid image file header");
   }
@@ -183,7 +192,11 @@ ReadMNIST_and_label (
   //
   // Open the label file.
   //
-  LabelsFile = OpenIdxFile ("train-labels.idx1-ubyte", 0x00000801, LabelsFileHeader);
+  LabelsFile = OpenIdxFile (
+                 ROOT_PATH + TRAIN_LABELS_IDX_FILE,
+                 0x00000801,
+                 LabelsFileHeader
+                 );
   if (LabelsFileHeader.size() != 1) {
     throw runtime_error ("Error: Invalid image file header");
   }

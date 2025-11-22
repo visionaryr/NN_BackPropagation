@@ -83,6 +83,24 @@ ConvertLabelsToNetworkOutput (
   return DesiredOutputs;
 }
 
+vector<matrix>
+ConvertDataToNetworkInput (
+  DATA_SET  &DataSet
+  )
+{
+  vector<matrix>  DataInputs;
+
+  for (unsigned int Index = 0; Index < (unsigned int)DataSet.size(); Index++) {
+    vector<double>  DataInput1dVector = DataSet[Index].ConvertToVector ();
+
+    matrix  DataInput (DataInput1dVector.size(), 1, DataInput1dVector);
+
+    DataInputs.push_back (DataInput);
+  }
+
+  return DataInputs;
+}
+
 /**
 
 **/
@@ -94,6 +112,7 @@ main (
   DATA_SET        DataSet;
   LABELS          LabelSet;
   vector<matrix>  DesiredOutputs;
+  vector<matrix>  DataInputs;
 
   //
   // Initialize random generator.
@@ -110,6 +129,7 @@ main (
   // Convert LabelSet to matrix format to match with network output.
   //
   ReadMNIST_and_label (DataSet, LabelSet, TrainingCategories);
+  DataInputs     = ConvertDataToNetworkInput (DataSet);
   DesiredOutputs = ConvertLabelsToNetworkOutput (LabelSet, TrainingCategories);
 
   //
@@ -124,10 +144,10 @@ main (
   BackPropagator  TrainingAlgoBp (FCN);
 
   TrainingAlgoBp.Train (
-    DataSet,         // Input data
+    DataInputs,      // Input data
     DesiredOutputs,  // Desired Output
     0.1,             // Learning rate
-    15,              // Epochs
+    1,               // Epochs
     0.05             // Target Loss
   );
 }

@@ -1,4 +1,6 @@
 #include "matrix.h"
+#include "DebugLib.h"
+
 #include <iostream>
 #include <cstdlib>
 using namespace std;
@@ -48,10 +50,9 @@ matrix multiply(const matrix &A, const matrix &B)
   int AColumns = A.getcolumn();
   int BColumns = B.getcolumn();
 
-  if(AColumns != BRows)
-  {
-    cout<<"The number of columns in the first matrix should be the same as the number of rows in the second matrix!"<<endl;
-    exit(1);
+  if(AColumns != BRows) {
+    DEBUG_LOG ("Columns of A matrix = " << AColumns << ", Rows of B matrix = " << BRows);
+    throw runtime_error ("Number of columns in the first matrix should be the same as the number of rows in the second matrix!");
   }
 
   matrix C (ARows, BColumns);

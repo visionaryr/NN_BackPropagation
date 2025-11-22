@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#define DEBUG_ENABLED
+
 #ifdef DEBUG_ENABLED
 
 #define DEBUG_LOG(msg) \

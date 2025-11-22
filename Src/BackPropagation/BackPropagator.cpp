@@ -13,7 +13,7 @@ BackPropagator::BackPropagator (
   FullyConnectedNetwork &FCN
   ) : Network (FCN)
 {
-  // InitNodeDelta ();
+  InitNodeDelta ();
   // InitDeltaWeights ();
 }
 
@@ -169,6 +169,8 @@ BackPropagator::Train (
 
   for (unsigned int Epoch = 1; Epoch <= Epochs; Epoch++) {
     StartTime = clock ();
+  
+    cout << "Training Epoch #" << Epoch << endl;
 
     EpochLoss = TrainOneEpoch (
                   InputDataSet,

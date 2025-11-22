@@ -75,35 +75,26 @@ void BackPropagator::NodeDeltaCalculation (
   const matrix  &DesiredOutput
   )
 {
-  matrix  NodeDeltaOfLayer;
-
-  NodeDelta.clear();
+  matrix        NodeDeltaOfLayer;
+  unsigned int  LastLayerIndex = (unsigned int)(Network.GetLayout().size() - 1);
 
   NodeDeltaOfLayer = CalculateLastLayerDelta (DesiredOutput);
-  NodeDelta.insert (NodeDelta.begin(), NodeDeltaOfLayer);
+  NodeDelta[LastLayerIndex] = NodeDeltaOfLayer;
 
   //
   // Calculate delta for all nodes in all layer except last layer.
   // Note: It's unnecessary to calculate the delta value of the first(input) layer(LayerIdx = 0).
   //
-  for (unsigned int LayerIdx = (unsigned int)(Network.GetLayout().size() - 2);
+  for (unsigned int LayerIdx = LastLayerIndex - 1;
        LayerIdx > 0;
        LayerIdx--) {
     NodeDeltaOfLayer = CalculateMidLayerDelta (LayerIdx);
-    NodeDelta.insert (NodeDelta.begin(), NodeDeltaOfLayer);
+    NodeDelta[LayerIdx] = NodeDeltaOfLayer;
   }
 
-  //
-  // Add NodeDelta matrix for input layer since it's not necessary for use to actually calculate
-  // the node delta for first(input) layer.
-  //
-  matrix  InputLayerNodeDelta(Network.GetLayout().front(), 1);
-
-  NodeDelta.insert (NodeDelta.begin(), InputLayerNodeDelta);
-
-  DEBUG_START()
-  PrintNodeDelta ();
-  DEBUG_END()
+  // DEBUG_START()
+  // PrintNodeDelta ();
+  // DEBUG_END()
 }
 
 /**

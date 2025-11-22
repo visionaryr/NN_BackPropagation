@@ -9,9 +9,9 @@ class matrix
 {
   public:
     matrix();    
-    matrix(int, int);
-    matrix(int, int, double);
-    matrix(int, int, std::vector<double>);
+    matrix(unsigned int, unsigned int);
+    matrix(unsigned int, unsigned int, double);
+    matrix(unsigned int, unsigned int, std::vector<double>);
     void show() const;
     void test_show() const;
     unsigned int getrow() const;
