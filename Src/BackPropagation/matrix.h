@@ -14,24 +14,24 @@ class matrix
     matrix(int, int, std::vector<double>);
     void show() const;
     void test_show() const;
-    int getrow() const;
-    int getcolumn() const;
-    double GetValue(int, int) const;
-    void SetValue(int, int, double);
+    unsigned int getrow() const;
+    unsigned int getcolumn() const;
+    double GetValue(unsigned int, unsigned int) const;
+    void SetValue(unsigned int, unsigned int, double);
     double Sum () const;
 
     std::vector<double> ConvertToVector();
-    std::vector<double> ConvertRowToVector (int) const;
-    std::vector<double> ConvertColumnToVector (int) const;
+    std::vector<double> ConvertRowToVector (unsigned int) const;
+    std::vector<double> ConvertColumnToVector (unsigned int) const;
 
     matrix ApplyElementWise (std::function<double(double)> &Func) const;
 
   private:
-    int row;
-    int column;
+    unsigned int row;
+    unsigned int column;
     std::vector< std::vector<double> > Matrix;
-    void InitMatrixWithValue(int, int, double);
-    int SetMatrix(int, int, std::vector<double>);
+    void InitMatrixWithValue(unsigned int, unsigned int, double);
+    int SetMatrix(unsigned int, unsigned int, std::vector<double>);
 };
 
 //

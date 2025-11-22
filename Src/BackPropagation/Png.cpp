@@ -5,6 +5,19 @@
 
 using namespace std;
 
+void get_png_file(vector<double> &arr_temp, int width, int height, png_bytep *row_pointers) {
+  for(int y = 0; y < height; y++)
+  {
+    png_bytep row = row_pointers[y];
+    for(int x = 0; x < width; x++)
+    {
+      png_bytep px = &(row[x * 4]);
+      arr_temp.push_back( (double)px[0] );
+
+      //printf("%4d, %4d = RGBA(%3d, %3d, %3d, %3d)\n", x, y, px[0], px[1], px[2], px[3]);
+    }
+  }
+}
 
 bool read_png_file(char *filename, vector<double> &arr_temp) {
   int width, height;
@@ -84,19 +97,4 @@ bool read_png_file(char *filename, vector<double> &arr_temp) {
 
   return true;
 
-}
-
-
-void get_png_file(vector<double> &arr_temp, int width, int height, png_bytep *row_pointers) {
-  for(int y = 0; y < height; y++)
-  {
-    png_bytep row = row_pointers[y];
-    for(int x = 0; x < width; x++)
-    {
-      png_bytep px = &(row[x * 4]);
-      arr_temp.push_back( (double)px[0] );
-
-      //printf("%4d, %4d = RGBA(%3d, %3d, %3d, %3d)\n", x, y, px[0], px[1], px[2], px[3]);
-    }
-  }
 }

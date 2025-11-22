@@ -61,7 +61,10 @@ matrix::matrix(int Rows, int Columns, vector<double> InitValues)
   @return  number of rows.
 
 **/
-int matrix::getrow() const
+unsigned int
+matrix::getrow(
+  void
+  ) const
 {
   return row;
 }
@@ -72,7 +75,10 @@ int matrix::getrow() const
   @return  number of columns.
 
 **/
-int matrix::getcolumn() const
+unsigned int
+matrix::getcolumn(
+  void
+  ) const
 {
   return column;
 }
@@ -83,9 +89,9 @@ int matrix::getcolumn() const
 **/
 void matrix::show() const
 {
-  for(int RowIdx = 0; RowIdx < row; RowIdx++)
+  for(unsigned int RowIdx = 0; RowIdx < row; RowIdx++)
   {
-    for(int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
+    for(unsigned int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
     {
       cout<<setw(5)<<Matrix[RowIdx][ColumnIdx]<<' ';
     }
@@ -100,9 +106,9 @@ void matrix::show() const
 **/
 void matrix::test_show() const
 {
-  for(int RowIdx = 0; RowIdx < row; RowIdx++)
+  for(unsigned int RowIdx = 0; RowIdx < row; RowIdx++)
   {
-    for(int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
+    for(unsigned int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
     {
       cout<<setw(2)<<((Matrix[RowIdx][ColumnIdx] > 0.5) ? 1 : 0);
     }
@@ -125,18 +131,23 @@ void matrix::test_show() const
   @return  -1  Size of SetValues vector is not equal to (Rows * Columns).
 
 **/
-int matrix::SetMatrix(int Rows, int Columns, vector<double> SetValues)
+int
+matrix::SetMatrix (
+  unsigned int   Rows,
+  unsigned int   Columns,
+  vector<double> SetValues
+  )
 {
-  if (SetValues.size() != (unsigned)(Rows * Columns)) {
+  if ((unsigned int)SetValues.size() != (Rows * Columns)) {
     return -1;
   }
 
   InitMatrixWithValue (Rows, Columns, 0.0);
 
   int counter = 0;
-  for(int RowIdx = 0; RowIdx < row; RowIdx++)
+  for(unsigned int RowIdx = 0; RowIdx < row; RowIdx++)
   {
-    for(int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
+    for(unsigned int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
     {
       Matrix[RowIdx][ColumnIdx] = SetValues[counter];
       counter++;
@@ -155,9 +166,13 @@ int matrix::SetMatrix(int Rows, int Columns, vector<double> SetValues)
   @return  Value of the element at (Row, Column)
 
 **/
-double matrix::GetValue(int Row, int Column) const
+double
+matrix::GetValue (
+  unsigned int Row,
+  unsigned int Column
+  ) const
 {
-  if (Row < 0 || Row >= row || Column < 0 || Column >= column) {
+  if (Row >= row || Column >= column) {
     throw std::out_of_range("matrix::GetValue: index out of range");
   }
   if (Matrix.size() == 0) {
@@ -174,9 +189,14 @@ double matrix::GetValue(int Row, int Column) const
   @param  Column  Column index of the element.
 
 **/
-void matrix::SetValue(int Row, int Column, double Value)
+void
+matrix::SetValue (
+  unsigned int Row,
+  unsigned int Column,
+  double Value
+  )
 {
- if (Row < 0 || Row >= row || Column < 0 || Column >= column) {
+ if (Row >= row || Column >= column) {
     throw std::out_of_range("matrix::SetValue: index out of range");
   }
   if (Matrix.size() == 0) {
@@ -194,7 +214,12 @@ void matrix::SetValue(int Row, int Column, double Value)
   @param  Columns  number of columns
 
 **/
-void matrix::InitMatrixWithValue(int Rows, int Columns, double InitValue)
+void
+matrix::InitMatrixWithValue (
+  unsigned int Rows,
+  unsigned int Columns,
+  double InitValue
+  )
 {
   if (Matrix.size () != 0) {
     Matrix.clear ();
@@ -203,7 +228,7 @@ void matrix::InitMatrixWithValue(int Rows, int Columns, double InitValue)
   row    = Rows;
   column = Columns;
 
-  for(int RowIdx = 0; RowIdx < row; RowIdx++)
+  for(unsigned int RowIdx = 0; RowIdx < row; RowIdx++)
   {
     vector<double> ARow(column, InitValue);
     Matrix.push_back(ARow);
@@ -245,9 +270,9 @@ matrix::Sum (
 vector<double> matrix::ConvertToVector()
 {
   vector<double> RetVector;
-  for(int RowIdx = 0; RowIdx < row; RowIdx++)
+  for(unsigned int RowIdx = 0; RowIdx < row; RowIdx++)
   {
-    for(int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
+    for(unsigned int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
     {
       RetVector.push_back(Matrix[RowIdx][ColumnIdx]);
     }
@@ -266,7 +291,7 @@ vector<double> matrix::ConvertToVector()
   @throw  std::out_of_range  Row index is out of range.
 
 **/
-vector<double> matrix::ConvertRowToVector (int Row) const
+vector<double> matrix::ConvertRowToVector (unsigned int Row) const
 {
   if (Row >= row)
   {
@@ -287,7 +312,7 @@ vector<double> matrix::ConvertRowToVector (int Row) const
   @throw  std::out_of_range  Column index is out of range.
 
 **/
-vector<double> matrix::ConvertColumnToVector (int Column) const
+vector<double> matrix::ConvertColumnToVector (unsigned int Column) const
 {
   if (Column >= column) {
     throw std::out_of_range("matrix::ConvertColumnToVector: index out of range");
@@ -295,7 +320,7 @@ vector<double> matrix::ConvertColumnToVector (int Column) const
 
   vector<double> ColumnVector;
 
-  for (int RowIdx = 0; RowIdx < row; RowIdx++) {
+  for (unsigned int RowIdx = 0; RowIdx < row; RowIdx++) {
     ColumnVector.push_back (Matrix[RowIdx][Column]);
   }
 
@@ -318,8 +343,8 @@ matrix::ApplyElementWise (
 {
   matrix C(row, column);
 
-  for(int RowIdx = 0; RowIdx < row; RowIdx++) {
-    for(int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++) {
+  for(unsigned int RowIdx = 0; RowIdx < row; RowIdx++) {
+    for(unsigned int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++) {
       C.SetValue (
           RowIdx,
           ColumnIdx,
