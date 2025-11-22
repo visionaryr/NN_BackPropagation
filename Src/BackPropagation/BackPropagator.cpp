@@ -163,19 +163,24 @@ BackPropagator::Train (
     throw runtime_error ("Epochs should at least be 1.");
   }
 
-  unsigned int  DataSetCount = (unsigned int)InputDataSet.size();
   double        EpochLoss;
+  clock_t       StartTime;
+  clock_t       EndTime;
 
   for (unsigned int Epoch = 1; Epoch <= Epochs; Epoch++) {
+    StartTime = clock ();
+
     EpochLoss = TrainOneEpoch (
                   InputDataSet,
                   DesiredOutputSet,
                   LearningRate
                   );
 
-    DEBUG_LOG ("Epoch " << Epoch << ": ");
-    DEBUG_LOG ("  Loss = "<< EpochLoss);
-    DEBUG_LOG ("  Consume time = " << (double)(t_end-t_start) / CLOCKS_PER_SEC << " seconds");
+    EndTime = clock ();
+
+    cout << "Epoch " << Epoch << ": " << endl;
+    cout << "  Loss = " << EpochLoss << endl;
+    cout << "  Consume time = " << (double)(EndTime - StartTime) / CLOCKS_PER_SEC << " seconds" << endl;
 
     if (EpochLoss < TargetLoss) {
       DEBUG_LOG ("Loss of this epoch is lower than target loss(" << TargetLoss << ")");

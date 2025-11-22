@@ -2,7 +2,7 @@
 #define _MNIST_DATA_SET_H_
 
 #include "matrix.h"
-#include "bp.h"
+#include "BackPropagator.h"
 
 typedef std::vector< unsigned int >  IDX_HEADER;
 

@@ -20,7 +20,7 @@ using namespace std;
 
 **/
 FullyConnectedNetwork::FullyConnectedNetwork (
-  vector<unsigned int> &NetworkFrame
+  NETWORK_LAYOUT  &NetworkFrame
   )
 {
   Layout = NetworkFrame;

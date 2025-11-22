@@ -14,7 +14,7 @@
 
 **/
 void
-Binarization (
+DataBinarization (
   DATA_SET  &DataSet
   );
 

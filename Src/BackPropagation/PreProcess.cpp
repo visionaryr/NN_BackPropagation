@@ -4,6 +4,14 @@
 
 using namespace std;
 
+double
+PixelBinarization (
+  double x
+  )
+{
+  return (x > 128) ? 1.0 : 0.0;
+}
+
 /**
   Binarize the pixel values in the dataset.
 
@@ -15,17 +23,13 @@ using namespace std;
 
 **/
 void
-Binarization (
+DataBinarization (
   DATA_SET  &DataSet
   )
 {
-  vector<double> Image;
+  function<double(double)> Binarization = PixelBinarization;
 
   for(int Index = 0; Index < (int)DataSet.size(); Index++) {
-    Image = DataSet[Index];
-
-    for(int PixelIndex = 0; PixelIndex < (int)Image.size(); PixelIndex++) {
-      Image[PixelIndex] = (Image[PixelIndex] > 128) ? 1 : 0;
-    }
+    DataSet[Index].ApplyElementWise (Binarization);
   }
 }

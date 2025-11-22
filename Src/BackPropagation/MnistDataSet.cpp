@@ -1,4 +1,3 @@
-#include "bp.h"
 #include "BpMisc.h"
 #include "MnistDataSet.h"
 
@@ -95,30 +94,30 @@ OpenIdxFile (
 
 **/
 static
-IMAGE
-ReadImageFromIdx (
+vector<double>
+ReadImageFromIdxToVector (
   ifstream      &File,
   unsigned int  NumberOfRows,
   unsigned int  NumberOfColumns
   )
 {
-  IMAGE          Image;
+  vector<double> ImageVector;
   unsigned char  Pixel = 0;
 
   if (!File.is_open () || File.eof ()) {
     throw runtime_error ("Error: Cannot read image from file");
   }
 
-  Image.resize (NumberOfRows * NumberOfColumns);
+  ImageVector.resize (NumberOfRows * NumberOfColumns);
 
   for (unsigned int Row = 0; Row < NumberOfRows; Row++) {
     for (unsigned int Column = 0; Column < NumberOfColumns; Column++) {
       File.read ((char*)&Pixel, sizeof(Pixel));
-      Image[Row * NumberOfColumns + Column] = (double)Pixel;
+      ImageVector[Row * NumberOfColumns + Column] = (double)Pixel;
     }
   }
 
-  return Image;
+  return ImageVector;
 }
 
 /**
@@ -155,8 +154,6 @@ ReadMNIST_and_label (
   unsigned int  NumberOfRows = 0;
   unsigned int  NumberOfColumns = 0;
   unsigned int  NumberOfLabels = 0;
-  DATA_SET      Images;
-  LABELS        Labels;
 
   if (LabelsToRead.size() == 0) {
     throw runtime_error ("Error: No labels to read");
@@ -164,6 +161,12 @@ ReadMNIST_and_label (
   if (LabelsToRead.size() > 10) {
     throw runtime_error ("Error: Too many labels to read");
   }
+
+  //
+  // Clear DataSet and LabelSet.
+  //
+  DataSet.clear ();
+  LabelSet.clear ();
 
   //
   // Open the image file.
@@ -197,7 +200,7 @@ ReadMNIST_and_label (
   // Read all images and labels, but only keep those with labels in LabelsToRead.
   //
   for (int Index = 0; Index < (int)NumberOfImages; Index++) {
-    IMAGE          Image;
+    vector<double> ImageVector;
     unsigned char  Pixel = 0;
     unsigned char  LabelValue = 0;
 
@@ -211,10 +214,12 @@ ReadMNIST_and_label (
       continue;
     }
   
-    Image = ReadImageFromIdx (ImagesFile, NumberOfRows, NumberOfColumns);
+    ImageVector = ReadImageFromIdxToVector (ImagesFile, NumberOfRows, NumberOfColumns);
+
+    matrix  Image (NumberOfRows, NumberOfColumns, ImageVector);
   
-    Images.push_back (Image);
-    Labels.push_back ((int)LabelValue);
+    DataSet.push_back (Image);
+    LabelSet.push_back ((int)LabelValue);
   }
 
   cout << "Number of images read: " << DataSet.size() << endl;

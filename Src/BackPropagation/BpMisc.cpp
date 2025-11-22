@@ -12,6 +12,7 @@ using namespace std;
 
   @param[in]  VectorToSearch  The vector to be searched.
   @param[in]  Value           The value to search for.
+  @param[out] IndexInVector   The Index of the Value in VectorToSearch.
 
   @retval  true   The value is found in VectorToSearch.
   @retval  false  The value is not found in VectorToSearch.
@@ -19,17 +20,41 @@ using namespace std;
 **/
 bool
 ValueInVector (
-  vector<int>  &VectorToSearch,
-  int          Value
+  vector<int>   &VectorToSearch,
+  int           Value,
+  unsigned int  *IndexInVector
   )
 {
   for (int Index = 0; Index < (int)VectorToSearch.size(); Index++) {
     if (VectorToSearch[Index] == Value) {
+      if (IndexInVector != NULL) {
+        *IndexInVector = Index;
+      }
       return true;
     }
   }
 
   return false;
+}
+
+/**
+  Check if a value is present in a vector.
+
+  @param[in]  VectorToSearch  The vector to be searched.
+  @param[in]  Value           The value to search for.
+  @param[out] IndexInVector   The Index of the Value in VectorToSearch.
+
+  @retval  true   The value is found in VectorToSearch.
+  @retval  false  The value is not found in VectorToSearch.
+
+**/
+bool
+ValueInVector (
+  vector<int>   &VectorToSearch,
+  int           Value
+  )
+{
+  return ValueInVector (VectorToSearch, Value, NULL);
 }
 
 /**
@@ -69,33 +94,33 @@ GetMaxIndex (
   @param[in]   DesireOutputLabel  The desired output label to be converted.
   @param[in]   TrainLabels        The vector of training labels.
 
-  @return      The binary vector representation of the desired output label.
+  @return      The binary matrix(Row, Column) = (TrainLables Count, 1) representation of the desired output label.
 
   @throw       runtime_error      One of the following conditions is met:
                                     * No training labels are specified in TrainLabels.
                                     * Too many training labels are specified in TrainLabels.
                                     * The desired output label is not in TrainLabels.
 **/
-std::vector<double>
-ConvertOutputValueToVector (
+matrix
+ConvertOutputValueToMatrix (
   int     DesireOutputLabel,
   LABELS  &TrainLabels
   )
 {
+  unsigned int  Index;
+
   if (TrainLabels.size() == 0 || TrainLabels.size() > 10) {
     throw runtime_error ("Error: Training labels are invalid.");
   }
 
-  if (!ValueInVector (TrainLabels, DesireOutputLabel)) {
+  if (!ValueInVector (TrainLabels, DesireOutputLabel, &Index)) {
     throw runtime_error ("Error: Desire output label is not in training labels.");
   }
 
-  vector<double> DesireOutput;
-  for(int Index = 0; Index < (int)TrainLabels.size(); Index++) {
-    DesireOutput.push_back ((TrainLabels[Index] == DesireOutputLabel) ? 1.0 : 0.0);
-  }
+  matrix DesireOutputMatrix (TrainLabels.size(), 1);
+  DesireOutputMatrix.SetValue (Index, 1, 1.0);
 
-  return DesireOutput;
+  return DesireOutputMatrix;
 }
 
 /**

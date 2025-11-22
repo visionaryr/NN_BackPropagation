@@ -15,15 +15,15 @@
   @param[in]   DesireOutputLabel  The desired output label to be converted.
   @param[in]   TrainLabels        The vector of training labels.
 
-  @return      The binary vector representation of the desired output label.
+  @return      The binary matrix(Row, Column) = (10, 1) representation of the desired output label.
 
   @throw       runtime_error      One of the following conditions is met:
                                     * No training labels are specified in TrainLabels.
                                     * Too many training labels are specified in TrainLabels.
                                     * The desired output label is not in TrainLabels.
 **/
-std::vector<double>
-ConvertOutputValueToVector (
+matrix
+ConvertOutputValueToMatrix (
   int     DesireOutputLabel,
   LABELS  &TrainLabels
   );
@@ -57,6 +57,7 @@ ConvertOutputVectorToValue (
 
   @param[in]  VectorToSearch  The vector to be searched.
   @param[in]  Value           The value to search for.
+  @param[out] IndexInVector   The Index of the Value in VectorToSearch.
 
   @retval  true   The value is found in VectorToSearch.
   @retval  false  The value is not found in VectorToSearch.
@@ -64,8 +65,25 @@ ConvertOutputVectorToValue (
 **/
 bool
 ValueInVector (
-  std::vector<int>  &VectorToSearch,
-  int               Value
+  std::vector<int>   &VectorToSearch,
+  int                Value,
+  unsigned int       *IndexInVector
+  );
+
+/**
+  Check if a value is present in a vector.
+
+  @param[in]  VectorToSearch  The vector to be searched.
+  @param[in]  Value           The value to search for.
+
+  @retval  true   The value is found in VectorToSearch.
+  @retval  false  The value is not found in VectorToSearch.
+
+**/
+bool
+ValueInVector (
+  std::vector<int>   &VectorToSearch,
+  int                Value
   );
 
 #endif

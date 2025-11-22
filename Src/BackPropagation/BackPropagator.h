@@ -74,12 +74,19 @@ class BackPropagator
     std::vector<matrix>            DeltaWeights;
 };
 
-typedef std::vector< double >  IMAGE;
+typedef matrix                 IMAGE;
 typedef std::vector< IMAGE >   DATA_SET;
 typedef std::vector< int >     LABELS;
 
-//dataset I/O functions
-void ReadMNIST_and_label(int, int, std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, std::vector<int> &);
+//
+// Dataset I/O functions
+//
+void ReadMNIST_and_label(
+  DATA_SET  &DataSet,
+  LABELS    &LabelSet,
+  LABELS    &LabelsToRead
+  );
+
 //void read_Mnist_Label(std::vector< std::vector<double> > &, std::vector<int> &);
 
 //other global functions

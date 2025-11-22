@@ -1,4 +1,5 @@
 #include "matrix.h"
+#include "DebugLib.h"
 
 #include <iostream>
 #include <iomanip>
@@ -49,6 +50,7 @@ matrix::matrix(int Rows, int Columns, vector<double> InitValues)
   int ret = SetMatrix (Rows, Columns, InitValues);
 
   if (ret != 0) {
+    DEBUG_LOG ("Matrix with (Row, Column) = (" << Rows << ", " << Columns << ") doesn't have same size with InitValues = " << InitValues.size());
     throw std::invalid_argument("matrix constructor: wrong size of InitValues");
   }
 }

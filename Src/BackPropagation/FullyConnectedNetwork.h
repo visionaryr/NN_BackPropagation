@@ -10,10 +10,12 @@
 #include <fstream>
 #include <cstdint>
 
+typedef std::vector<unsigned int> NETWORK_LAYOUT;
+
 class FullyConnectedNetwork
 {
   public:
-    FullyConnectedNetwork(std::vector<unsigned int> &);
+    FullyConnectedNetwork(NETWORK_LAYOUT &);
     FullyConnectedNetwork(std::string);
     void ExportToFile(std::string, std::string); // Export the network to a file.
     void ImportFromFile(std::string); // Import a network from a file.
@@ -45,7 +47,7 @@ class FullyConnectedNetwork
     //
     std::vector<matrix> NodeActivation;
     std::vector<matrix> Weights;
-    std::vector<unsigned int> Layout;
+    NETWORK_LAYOUT      Layout;
 
     ACTIVATION_TYPE  ActivationType;
 };
