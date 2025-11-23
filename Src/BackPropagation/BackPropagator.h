@@ -7,6 +7,12 @@
 #include <vector>
 #include <functional>
 
+typedef enum {
+  BATCH_MODE = 0,
+  PATTERN_MODE,
+  TRAINING_MODE_MAX
+} TRAINING_MODE;
+
 class BackPropagator
 {
   public:
@@ -17,7 +23,8 @@ class BackPropagator
       const std::vector<matrix>  &DesiredOutput,
       const double               LearningRate,
       const unsigned int         Epochs,
-      const double               TargetLoss
+      const double               TargetLoss,
+      const TRAINING_MODE        TrainingMode
       );
 
   private:
@@ -50,8 +57,21 @@ class BackPropagator
       );
 
     void  UpdateWeights (
+      std::vector<matrix>  DeltaWeights
+      );
+
+    void  InitTrainingMode (
       void
       );
+
+    void  UpdateBatchModeDeltaWeights (
+      void
+      );
+
+    void
+    AverageBatchModeDeltaWeights (
+      unsigned int  TotalTrainDataSetCount
+    );
 
     double  LossMeanSquareError (
       const matrix &DesiredOutput
@@ -72,6 +92,9 @@ class BackPropagator
     FullyConnectedNetwork          &Network;
     std::vector<matrix>            NodeDelta;
     std::vector<matrix>            DeltaWeights;
+    std::vector<matrix>            BatchModeDeltaWeights;
+
+    TRAINING_MODE                  TrainingMode;
 };
 
 typedef matrix                 IMAGE;

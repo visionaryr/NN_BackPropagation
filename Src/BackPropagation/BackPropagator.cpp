@@ -14,7 +14,6 @@ BackPropagator::BackPropagator (
   ) : Network (FCN)
 {
   InitNodeDelta ();
-  // InitDeltaWeights ();
 }
 
 /**
@@ -102,12 +101,47 @@ void BackPropagator::InitDeltaWeights ()
 {
   vector<unsigned int> Layout = Network.GetLayout ();
 
-  for(int Index = 0; Index < (int)Layout.size() - 1; Index++) {
+  for(unsigned int Index = 0; Index < (unsigned int)Layout.size() - 1; Index++) {
     matrix LayerDeltaWeights (Layout[Index + 1], Layout[Index]);
     DeltaWeights.push_back (LayerDeltaWeights);
   }
 }
 
+/**
+  Initialize training mode related settings.
+  No initialization is required for PATTERN_MODE.
+
+**/
+void
+BackPropagator::InitTrainingMode (
+  void
+  )
+{
+  if (TrainingMode == PATTERN_MODE) {
+    DEBUG_LOG ("Training mode is set to pattern mode, no initialization is required.");
+    return;
+  }
+
+  NETWORK_LAYOUT  Layout = Network.GetLayout ();
+
+  BatchModeDeltaWeights.clear();
+
+  for (unsigned int Index = 0; Index < (unsigned int)Layout.size() - 1; Index++) {
+    matrix LayerDeltaWeights (Layout[Index + 1], Layout[Index]);
+    BatchModeDeltaWeights.push_back (LayerDeltaWeights);
+  }
+}
+
+/**
+  Train the network with one data sample, including forward pass and backward pass.
+
+  @param[in]  InputData     A matrix representing the input data.
+  @param[in]  DesiredOutput A matrix representing the desired output values.
+  @param[in]  LearningRate  A double representing the learning rate for weight updates.
+
+  @return A double representing the loss value after training with this data sample.
+
+**/
 double
 BackPropagator::TrainOneData (
   const matrix  &InputData,
@@ -126,6 +160,16 @@ BackPropagator::TrainOneData (
   return Loss;
 }
 
+/**
+  Train the network for one epoch over the entire dataset.
+
+  @param[in]  InputDataSet     A vector of matrices representing the input data samples.
+  @param[in]  DesiredOutputSet A vector of matrices representing the desired output values for each sample.
+  @param[in]  LearningRate     A double representing the learning rate for weight updates.
+
+  @return A double representing the average loss over the epoch.
+
+**/
 double
 BackPropagator::TrainOneEpoch (
   const vector<matrix> &InputDataSet,
@@ -143,6 +187,11 @@ BackPropagator::TrainOneEpoch (
                    );
   }
 
+  if (TrainingMode == BATCH_MODE) {
+    AverageBatchModeDeltaWeights ((unsigned int)InputDataSet.size());
+    UpdateWeights (BatchModeDeltaWeights);
+  }
+
   return (double)(EpochLoss / InputDataSet.size());
 }
 
@@ -152,7 +201,8 @@ BackPropagator::Train (
   const vector<matrix>  &DesiredOutputSet,
   const double          LearningRate,
   const unsigned int    Epochs,
-  const double          TargetLoss
+  const double          TargetLoss,
+  const TRAINING_MODE   TrainingMode
   )
 {
   if (InputDataSet.size() != DesiredOutputSet.size()) {
@@ -162,6 +212,12 @@ BackPropagator::Train (
   if (Epochs == 0) {
     throw runtime_error ("Epochs should at least be 1.");
   }
+
+  //
+  // Use BATCH_MODE as default.
+  //
+  this->TrainingMode = (TrainingMode >= TRAINING_MODE_MAX) ? BATCH_MODE : TrainingMode;
+  InitTrainingMode ();
 
   double        EpochLoss;
   clock_t       StartTime;

@@ -147,8 +147,9 @@ main (
     DataInputs,      // Input data
     DesiredOutputs,  // Desired Output
     0.1,             // Learning rate
-    1,               // Epochs
-    0.05             // Target Loss
+    8,               // Epochs
+    0.05,            // Target Loss
+    BATCH_MODE     // Training mode
   );
 }
 

@@ -130,16 +130,58 @@ BackPropagator::DeltaWeightsCalculation (
 **/
 void
 BackPropagator::UpdateWeights (
-  void
+  vector<matrix>  DeltaWeights
   )
 {
   if (DeltaWeights.empty () ||
       (DeltaWeights.size () != Network.GetLayout().size() - 1)) {
     DEBUG_LOG ("DeltaWeights Size = " << DeltaWeights.size() << " , Network Layout size = " << Network.GetLayout().size());
     DEBUG_LOG ("Delta Weights are not ready, Failed to update");
+    return;
   }
 
   Network.UpdateWeight (DeltaWeights);
+}
+
+/**
+  Update the batch mode delta weights by adding the current delta weights.
+
+**/
+void
+BackPropagator::UpdateBatchModeDeltaWeights (
+  void
+  )
+{
+  if (DeltaWeights.size() != BatchModeDeltaWeights.size()) {
+    DEBUG_LOG ("DeltaWeights has size = " << DeltaWeights.size());
+    DEBUG_LOG ("BatchModeDeltaWeights has size = " << BatchModeDeltaWeights.size());
+    throw runtime_error ("Failed to update batch mode delta weights.");
+  }
+
+  for (unsigned int Index = 0; Index < BatchModeDeltaWeights.size(); Index++) {
+    BatchModeDeltaWeights[Index] = add (BatchModeDeltaWeights[Index], DeltaWeights[Index]);
+  }
+}
+
+/**
+  Calculate the average of batch mode delta weights.
+
+  @param[in]  TotalTrainDataSetCount  Total number of training data samples.
+
+**/
+void
+BackPropagator::AverageBatchModeDeltaWeights (
+  unsigned int  TotalTrainDataSetCount
+  )
+{
+  if (TotalTrainDataSetCount == 0) {
+    DEBUG_LOG ("Total train data set count is 0, failed to calculate average.");
+    throw runtime_error ("Failed to calculate average if dividing 0.");
+  }
+
+  for (unsigned int Index = 0; Index < (unsigned int)BatchModeDeltaWeights.size(); Index++) {
+    BatchModeDeltaWeights[Index] = multiplyBy (BatchModeDeltaWeights[Index], 1 / (double)TotalTrainDataSetCount);
+  }
 }
 
 /**
@@ -162,7 +204,11 @@ BackPropagator::BackwardPass (
 
   DeltaWeightsCalculation (LearningRate);
 
-  UpdateWeights ();
+  if (TrainingMode == PATTERN_MODE) {
+    UpdateWeights (DeltaWeights);
+  } else {
+    UpdateBatchModeDeltaWeights ();
+  }
 }
 
 double
