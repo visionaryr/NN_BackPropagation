@@ -61,7 +61,7 @@ void FullyConnectedNetwork::ShowInfo (
   int WeightRow, WeightColumn;
   int MiddleLayers = Weights.size();
 
-  cout << "===== Fully Connected Network Info =====" << endl;
+  cout << endl << "===== Fully Connected Network Info =====" << endl;
   cout << "Number of layers: " << Layout.size() << endl;
   cout << "Nodes in input layer: " << Layout[0] << endl;
   cout << "Nodes in output layer: " << Layout.back() << endl;

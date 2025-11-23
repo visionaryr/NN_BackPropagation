@@ -14,6 +14,8 @@ BackPropagator::BackPropagator (
   ) : Network (FCN)
 {
   InitNodeDelta ();
+
+  InitTrainingParams ();
 }
 
 /**
@@ -108,6 +110,24 @@ void BackPropagator::InitDeltaWeights ()
 }
 
 /**
+
+**/
+void
+BackPropagator::InitBatchModeDeltaWeights (
+  void
+  )
+{
+  vector<unsigned int> Layout = Network.GetLayout ();
+
+  BatchModeDeltaWeights.clear();
+
+  for (unsigned int Index = 0; Index < (unsigned int)Layout.size() - 1; Index++) {
+    matrix LayerDeltaWeights (Layout[Index + 1], Layout[Index]);
+    BatchModeDeltaWeights.push_back (LayerDeltaWeights);
+  }
+}
+
+/**
   Initialize training mode related settings.
   No initialization is required for PATTERN_MODE.
 
@@ -122,14 +142,7 @@ BackPropagator::InitTrainingMode (
     return;
   }
 
-  NETWORK_LAYOUT  Layout = Network.GetLayout ();
-
-  BatchModeDeltaWeights.clear();
-
-  for (unsigned int Index = 0; Index < (unsigned int)Layout.size() - 1; Index++) {
-    matrix LayerDeltaWeights (Layout[Index + 1], Layout[Index]);
-    BatchModeDeltaWeights.push_back (LayerDeltaWeights);
-  }
+  InitBatchModeDeltaWeights ();
 }
 
 /**
@@ -177,19 +190,29 @@ BackPropagator::TrainOneEpoch (
   const double         LearningRate
   )
 {
-  double  EpochLoss = 0.0;
+  double        EpochLoss = 0.0;
+  unsigned int  TrainedDataCount;
 
+  TrainedDataCount = 0;
   for (unsigned int DataIndex = 0; DataIndex < (unsigned int)InputDataSet.size(); DataIndex++) {
     EpochLoss += TrainOneData (
                    InputDataSet[DataIndex],
                    DesiredOutputSet[DataIndex],
                    LearningRate
                    );
-  }
 
-  if (TrainingMode == BATCH_MODE) {
-    AverageBatchModeDeltaWeights ((unsigned int)InputDataSet.size());
-    UpdateWeights (BatchModeDeltaWeights);
+    TrainedDataCount++;
+
+    //
+    // Update weights in batch mode after processing a batch of data samples.
+    //
+    if ((TrainingMode == BATCH_MODE) && (TrainedDataCount == BatchSize)) {
+      AverageBatchModeDeltaWeights (BatchSize);
+      UpdateWeights (BatchModeDeltaWeights);
+
+      TrainedDataCount = 0;
+      InitBatchModeDeltaWeights ();
+    }
   }
 
   return (double)(EpochLoss / InputDataSet.size());
@@ -197,27 +220,22 @@ BackPropagator::TrainOneEpoch (
 
 void
 BackPropagator::Train (
-  const vector<matrix>  &InputDataSet,
-  const vector<matrix>  &DesiredOutputSet,
-  const double          LearningRate,
-  const unsigned int    Epochs,
-  const double          TargetLoss,
-  const TRAINING_MODE   TrainingMode
+  vector<matrix>  &InputDataSet,
+  vector<matrix>  &DesiredOutputSet
   )
 {
   if (InputDataSet.size() != DesiredOutputSet.size()) {
     DEBUG_LOG (__FUNCTION__ << ": InputData count = " << InputDataSet.size() << ", DesiredOutput count = " << DesiredOutputSet.size());
     throw runtime_error ("Amount of InputData and DesiredOutput isn't match.");
   }
-  if (Epochs == 0) {
-    throw runtime_error ("Epochs should at least be 1.");
+  if (BatchSize > (unsigned int)InputDataSet.size()) {
+    DEBUG_LOG (__FUNCTION__ << ": Batch size = " << BatchSize << ", InputData count = " << InputDataSet.size());
+    throw runtime_error ("Batch size can't be larger than total training data set size.");
   }
 
-  //
-  // Use BATCH_MODE as default.
-  //
-  this->TrainingMode = (TrainingMode >= TRAINING_MODE_MAX) ? BATCH_MODE : TrainingMode;
   InitTrainingMode ();
+
+  ShowTrainingParams ();
 
   double        EpochLoss;
   clock_t       StartTime;

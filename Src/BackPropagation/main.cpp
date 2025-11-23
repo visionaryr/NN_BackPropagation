@@ -139,18 +139,19 @@ main (
   FullyConnectedNetwork  FCN (Layout);
 
   //
-  // Initialize trainning algorithm, here we use Back Propagation.
+  // Initialize trainning algorithm and parameters, here we use Back Propagation.
   //
   BackPropagator  TrainingAlgoBp (FCN);
 
+  TrainingAlgoBp.SetLearningRate (0.1);
+  TrainingAlgoBp.SetEpochs (3);
+  TrainingAlgoBp.SetTargetLoss (0.05);
+  TrainingAlgoBp.SetTrainingMode (BATCH_MODE, 300);
+
   TrainingAlgoBp.Train (
     DataInputs,      // Input data
-    DesiredOutputs,  // Desired Output
-    0.1,             // Learning rate
-    8,               // Epochs
-    0.05,            // Target Loss
-    BATCH_MODE     // Training mode
-  );
+    DesiredOutputs   // Desired Output
+    );
 }
 
 // int main()

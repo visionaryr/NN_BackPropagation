@@ -17,14 +17,38 @@ class BackPropagator
 {
   public:
     BackPropagator (FullyConnectedNetwork &FCN);
-  
+
+    //
+    // Public functions to configure training parameters.
+    //
+    void SetLearningRate (
+      const double  LearningRate
+      );
+
+    void SetEpochs (
+      const unsigned int  Epochs
+      );
+
+    void SetTargetLoss (
+      const double  TargetLoss
+      );
+
+    void SetTrainingMode (
+      const TRAINING_MODE  TrainingMode,
+      const unsigned int   BatchSize
+      );
+
+    void
+    ShowTrainingParams (
+      void
+      );
+
+    //
+    // Function to start training process.
+    //
     void Train (
-      const std::vector<matrix>  &InputData,
-      const std::vector<matrix>  &DesiredOutput,
-      const double               LearningRate,
-      const unsigned int         Epochs,
-      const double               TargetLoss,
-      const TRAINING_MODE        TrainingMode
+      std::vector<matrix>  &InputDataSet,
+      std::vector<matrix>  &DesiredOutputSet
       );
 
   private:
@@ -60,11 +84,18 @@ class BackPropagator
       std::vector<matrix>  DeltaWeights
       );
 
-    void  InitTrainingMode (
+    void
+    InitTrainingMode (
       void
       );
 
-    void  UpdateBatchModeDeltaWeights (
+    void
+    InitBatchModeDeltaWeights (
+      void
+      );
+
+    void
+    UpdateBatchModeDeltaWeights (
       void
       );
 
@@ -89,12 +120,26 @@ class BackPropagator
       const double               LearningRate
       );
 
+    // std::optional<std::reference_wrapper<FullyConnectedNetwork>>  Network;
     FullyConnectedNetwork          &Network;
+
     std::vector<matrix>            NodeDelta;
     std::vector<matrix>            DeltaWeights;
     std::vector<matrix>            BatchModeDeltaWeights;
 
-    TRAINING_MODE                  TrainingMode;
+    //
+    // Training parameters
+    //
+    void
+    InitTrainingParams (
+      void
+      );
+
+    double                 LearningRate;
+    unsigned int           Epochs;
+    double                 TargetLoss;
+    TRAINING_MODE          TrainingMode;
+    unsigned int           BatchSize;
 };
 
 typedef matrix                 IMAGE;
