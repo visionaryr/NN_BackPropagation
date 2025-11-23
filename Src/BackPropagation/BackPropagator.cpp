@@ -180,7 +180,7 @@ BackPropagator::Train (
 
     EndTime = clock ();
 
-    cout << "Epoch " << Epoch << ": " << endl;
+    cout << "Epoch #" << Epoch << ": " << endl;
     cout << "  Loss = " << EpochLoss << endl;
     cout << "  Consume time = " << (double)(EndTime - StartTime) / CLOCKS_PER_SEC << " seconds" << endl;
 

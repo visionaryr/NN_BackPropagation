@@ -91,6 +91,8 @@ void FullyConnectedNetwork::ShowInfo (
       Weights[Index].show();
     }
   }
+
+  cout << "========================================" << endl;
 }
 
 /**
