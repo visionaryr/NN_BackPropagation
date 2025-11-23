@@ -40,6 +40,11 @@ EXEC = $(BIN_DIR)/$(TARGET)
 .PHONY: all
 all: $(EXEC)
 
+# Debug target: Add -DDEBUG_ENABLED to CXXFLAGS to enable debug messages.
+.PHONY: debug
+debug: CXXFLAGS += -DDEBUG_ENABLED
+debug: $(EXEC)
+
 # Rule to Link the final executable (The link step)
 # Dependencies: All object files (OBJS)
 # Order-Only Prerequisite: The bin directory must exist (| $(BIN_DIR))
