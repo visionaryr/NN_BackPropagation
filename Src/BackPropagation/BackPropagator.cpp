@@ -113,17 +113,17 @@ void BackPropagator::InitDeltaWeights ()
 
 **/
 void
-BackPropagator::InitBatchModeDeltaWeights (
+BackPropagator::InitBatchDeltaWeights (
   void
   )
 {
   vector<unsigned int> Layout = Network.GetLayout ();
 
-  BatchModeDeltaWeights.clear();
+  BatchDeltaWeights.clear();
 
   for (unsigned int Index = 0; Index < (unsigned int)Layout.size() - 1; Index++) {
     matrix LayerDeltaWeights (Layout[Index + 1], Layout[Index]);
-    BatchModeDeltaWeights.push_back (LayerDeltaWeights);
+    BatchDeltaWeights.push_back (LayerDeltaWeights);
   }
 }
 
@@ -137,12 +137,7 @@ BackPropagator::InitTrainingMode (
   void
   )
 {
-  if (TrainingMode == PATTERN_MODE) {
-    DEBUG_LOG ("Training mode is set to pattern mode, no initialization is required.");
-    return;
-  }
-
-  InitBatchModeDeltaWeights ();
+  InitBatchDeltaWeights ();
 }
 
 /**
@@ -206,12 +201,12 @@ BackPropagator::TrainOneEpoch (
     //
     // Update weights in batch mode after processing a batch of data samples.
     //
-    if ((TrainingMode == BATCH_MODE) && (TrainedDataCount == BatchSize)) {
-      AverageBatchModeDeltaWeights (BatchSize);
-      UpdateWeights (BatchModeDeltaWeights);
+    if (TrainedDataCount == BatchSize) {
+      AverageBatchDeltaWeights (BatchSize);
+      UpdateWeights (BatchDeltaWeights);
 
       TrainedDataCount = 0;
-      InitBatchModeDeltaWeights ();
+      InitBatchDeltaWeights ();
     }
   }
 

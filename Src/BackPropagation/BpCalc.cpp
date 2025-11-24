@@ -148,29 +148,30 @@ BackPropagator::UpdateWeights (
 
 **/
 void
-BackPropagator::UpdateBatchModeDeltaWeights (
+BackPropagator::UpdateBatchDeltaWeights (
   void
   )
 {
-  if (DeltaWeights.size() != BatchModeDeltaWeights.size()) {
+  if (DeltaWeights.size() != BatchDeltaWeights.size()) {
     DEBUG_LOG ("DeltaWeights has size = " << DeltaWeights.size());
-    DEBUG_LOG ("BatchModeDeltaWeights has size = " << BatchModeDeltaWeights.size());
-    throw runtime_error ("Failed to update batch mode delta weights.");
+    DEBUG_LOG ("BatchDeltaWeights has size = " << BatchDeltaWeights.size());
+    throw runtime_error ("Failed to update batch delta weights.");
   }
 
-  for (unsigned int Index = 0; Index < BatchModeDeltaWeights.size(); Index++) {
-    BatchModeDeltaWeights[Index] = add (BatchModeDeltaWeights[Index], DeltaWeights[Index]);
+  for (unsigned int Index = 0; Index < BatchDeltaWeights.size(); Index++) {
+    BatchDeltaWeights[Index] = add (BatchDeltaWeights[Index], DeltaWeights[Index]);
   }
 }
 
 /**
-  Calculate the average of batch mode delta weights.
+  Calculate the average of delta weights of a batch.
+  The count of training data samples in the batch is specified by TotalTrainDataSetCount.
 
   @param[in]  TotalTrainDataSetCount  Total number of training data samples.
 
 **/
 void
-BackPropagator::AverageBatchModeDeltaWeights (
+BackPropagator::AverageBatchDeltaWeights (
   unsigned int  TotalTrainDataSetCount
   )
 {
@@ -179,8 +180,12 @@ BackPropagator::AverageBatchModeDeltaWeights (
     throw runtime_error ("Failed to calculate average if dividing 0.");
   }
 
-  for (unsigned int Index = 0; Index < (unsigned int)BatchModeDeltaWeights.size(); Index++) {
-    BatchModeDeltaWeights[Index] = multiplyBy (BatchModeDeltaWeights[Index], 1 / (double)TotalTrainDataSetCount);
+  if (TotalTrainDataSetCount == 1) {
+    return;
+  }
+
+  for (unsigned int Index = 0; Index < (unsigned int)BatchDeltaWeights.size(); Index++) {
+    BatchDeltaWeights[Index] = multiplyBy (BatchDeltaWeights[Index], 1 / (double)TotalTrainDataSetCount);
   }
 }
 
@@ -204,11 +209,7 @@ BackPropagator::BackwardPass (
 
   DeltaWeightsCalculation (LearningRate);
 
-  if (TrainingMode == PATTERN_MODE) {
-    UpdateWeights (DeltaWeights);
-  } else {
-    UpdateBatchModeDeltaWeights ();
-  }
+  UpdateBatchDeltaWeights ();
 }
 
 double

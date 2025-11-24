@@ -90,17 +90,17 @@ class BackPropagator
       );
 
     void
-    InitBatchModeDeltaWeights (
+    InitBatchDeltaWeights (
       void
       );
 
     void
-    UpdateBatchModeDeltaWeights (
+    UpdateBatchDeltaWeights (
       void
       );
 
     void
-    AverageBatchModeDeltaWeights (
+    AverageBatchDeltaWeights (
       unsigned int  TotalTrainDataSetCount
     );
 
@@ -125,7 +125,7 @@ class BackPropagator
 
     std::vector<matrix>            NodeDelta;
     std::vector<matrix>            DeltaWeights;
-    std::vector<matrix>            BatchModeDeltaWeights;
+    std::vector<matrix>            BatchDeltaWeights;
 
     //
     // Training parameters

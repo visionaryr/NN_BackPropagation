@@ -61,9 +61,11 @@ BackPropagator::SetTrainingMode (
 
   this->TrainingMode = TrainingMode;
 
-  if (this->TrainingMode == BATCH_MODE) {
-    this->BatchSize = BatchSize;
-  }
+  //
+  // Batch mode means to update weights after processing a batch of data samples.
+  // Pattern mode, means to update weights after processing each data sample.
+  //
+  this->BatchSize = (this->TrainingMode == PATTERN_MODE) ? 1 : BatchSize;
 }
 
 void
@@ -76,9 +78,9 @@ BackPropagator::ShowTrainingParams (
   cout << "  Epochs        : " << Epochs << endl;
   cout << "  Target Loss   : " << TargetLoss << endl;
   cout << "  Training Mode : " << ((TrainingMode == BATCH_MODE) ? "BATCH_MODE" : "PATTERN_MODE") << endl;
-  if (TrainingMode == BATCH_MODE) {
+  //if (TrainingMode == BATCH_MODE) {
     cout << "  Batch Size    : " << BatchSize << endl;
-  }
+  //}
 
   cout << "======================================" << endl;
 }
