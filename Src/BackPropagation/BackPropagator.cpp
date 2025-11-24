@@ -1,6 +1,8 @@
 #include "BackPropagator.h"
 #include "DebugLib.h"
 
+#include <set>
+
 using namespace std;
 
 /**
@@ -185,27 +187,31 @@ BackPropagator::TrainOneEpoch (
   const double         LearningRate
   )
 {
-  double        EpochLoss = 0.0;
-  unsigned int  TrainedDataCount;
+  double             EpochLoss = 0.0;
+  set<unsigned int>  TrainedDataIndex;
+  unsigned int       RandIndex;
 
-  TrainedDataCount = 0;
-  for (unsigned int DataIndex = 0; DataIndex < (unsigned int)InputDataSet.size(); DataIndex++) {
+  while (TrainedDataIndex.size() < InputDataSet.size()) {
+    RandIndex = rand() % InputDataSet.size();
+    if (TrainedDataIndex.count (RandIndex) != 0) {
+      continue;
+    }
+
+    TrainedDataIndex.insert (RandIndex);
+
     EpochLoss += TrainOneData (
-                   InputDataSet[DataIndex],
-                   DesiredOutputSet[DataIndex],
+                   InputDataSet[RandIndex],
+                   DesiredOutputSet[RandIndex],
                    LearningRate
                    );
-
-    TrainedDataCount++;
 
     //
     // Update weights in batch mode after processing a batch of data samples.
     //
-    if (TrainedDataCount == BatchSize) {
+    if ((TrainedDataIndex.size() % BatchSize) == 0) {
       AverageBatchDeltaWeights (BatchSize);
       UpdateWeights (BatchDeltaWeights);
 
-      TrainedDataCount = 0;
       InitBatchDeltaWeights ();
     }
   }
