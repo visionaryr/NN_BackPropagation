@@ -274,9 +274,11 @@ BackPropagator::TrainOneEpoch (
                    );
 
     //
-    // Update weights in batch mode after processing a batch of data samples.
+    // Update weights in batch mode after processing a batch of data samples
+    // or after processing all data samples.
     //
-    if ((TrainedDataIndex.size() % BatchSize) == 0) {
+    if (((TrainedDataIndex.size() % BatchSize) == 0) ||
+        (TrainedDataIndex.size() == InputDataSet.size())) {
       AverageBatchDeltaWeights (BatchSize);
       UpdateWeights (BatchDeltaWeights);
 

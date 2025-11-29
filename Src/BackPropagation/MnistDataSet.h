@@ -6,12 +6,20 @@
 
 typedef std::vector< unsigned int >  IDX_HEADER;
 
+#define TRAINING_DATA  0x0001
+#define TEST_DATA      0x0002
+
+typedef matrix                       IMAGE;
+typedef std::vector< IMAGE >         DATA_SET;
+typedef std::vector< unsigned int >  LABELS;
+
 /**
   Read images and labels from the MNIST dataset files.
 
   This function reads images and their corresponding labels from the MNIST data set files.
   Only images with labels specified in LabelsToRead are kept.
 
+  @param[in]   DataType      An unsigned short indicating whether to read training or test data.
   @param[out]  DataSet       The vector to store the read images.
                              Each image is represented as a vector of doubles, and pixels are in row-major order.
   @param[out]  LabelSet      The vector to store the corresponding labels for the images in DataSet.
@@ -27,9 +35,10 @@ typedef std::vector< unsigned int >  IDX_HEADER;
 **/
 void
 ReadMNIST_and_label (
-  DATA_SET  &DataSet,
-  LABELS    &LabelSet,
-  LABELS    &LabelsToRead
+  unsigned short  DataType,
+  DATA_SET        &DataSet,
+  LABELS          &LabelSet,
+  LABELS          &LabelsToRead
   );
 
 /**

@@ -5,6 +5,8 @@
 
 #include <vector>
 
+using namespace std;
+
 /**
   Convert a desired output label to a binary vector representation.
 
@@ -24,32 +26,8 @@
 **/
 matrix
 ConvertOutputValueToMatrix (
-  int     DesireOutputLabel,
-  LABELS  &TrainLabels
-  );
-
-/**
-  Convert an output vector to the corresponding label value.
-
-  This function converts an output vector to the corresponding label value.
-  The index of the maximum value in the output vector is used to determine the label.
-  The label corresponding to that index in TrainLabels is returned.
-
-  @param[in]   OutputVector  The output vector to be converted.
-  @param[in]   TrainLabels   The vector of training labels.
-
-  @return      The label value corresponding to the maximum value in OutputVector.
-
-  @throw       runtime_error  One of the following conditions is met:
-                                * No training labels are specified in TrainLabels.
-                                * Too many training labels are specified in TrainLabels.
-                                * The size of OutputVector does not match the size of TrainLabels.
-
-**/
-int
-ConvertOutputVectorToValue (
-  std::vector<double>  &OutputVector,
-  LABELS               &TrainLabels
+  int                   DesireOutputLabel,
+  vector<unsigned int>  &TrainLabels
   );
 
 /**
@@ -65,9 +43,9 @@ ConvertOutputVectorToValue (
 **/
 bool
 ValueInVector (
-  std::vector<int>   &VectorToSearch,
-  int                Value,
-  unsigned int       *IndexInVector
+  vector<unsigned int>   &VectorToSearch,
+  unsigned int           Value,
+  unsigned int           *IndexInVector
   );
 
 /**
@@ -82,8 +60,8 @@ ValueInVector (
 **/
 bool
 ValueInVector (
-  std::vector<int>   &VectorToSearch,
-  int                Value
+  vector<unsigned int>   &VectorToSearch,
+  unsigned int           Value
   );
 
 #endif

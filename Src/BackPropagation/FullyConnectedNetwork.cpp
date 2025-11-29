@@ -410,3 +410,26 @@ FullyConnectedNetwork::Forward (
     NodeActivation[LayerIdx + 1] = Z.ApplyElementWise (ActivationFunction);
   }
 }
+
+unsigned int
+FullyConnectedNetwork::Predict (
+  const matrix &InputData
+  )
+{
+  Forward (InputData);
+
+  matrix  OutputActivation = GetActivationByLayer (Layout.size() - 1);
+
+  unsigned int  MaxIndex = 0;
+  double        MaxValue = OutputActivation.GetValue (0, 0);
+
+  for (unsigned int Index = 1; Index < Layout.back(); Index++) {
+    double  CurrentValue = OutputActivation.GetValue (Index, 0);
+    if (CurrentValue > MaxValue) {
+      MaxValue = CurrentValue;
+      MaxIndex = Index;
+    }
+  }
+
+  return MaxIndex;
+}

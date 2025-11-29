@@ -142,22 +142,4 @@ class BackPropagator
     unsigned int           BatchSize;
 };
 
-typedef matrix                 IMAGE;
-typedef std::vector< IMAGE >   DATA_SET;
-typedef std::vector< int >     LABELS;
-
-//
-// Dataset I/O functions
-//
-void ReadMNIST_and_label(
-  DATA_SET  &DataSet,
-  LABELS    &LabelSet,
-  LABELS    &LabelsToRead
-  );
-
-//void read_Mnist_Label(std::vector< std::vector<double> > &, std::vector<int> &);
-
-//other global functions
-double predict(std::vector< std::vector<double> > &, std::vector< std::vector<double> > &, int, int, FullyConnectedNetwork &, std::vector<int> &);
-
 #endif

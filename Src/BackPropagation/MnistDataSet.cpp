@@ -10,6 +10,8 @@ using namespace std;
 
 #define  TRAIN_IMAGES_IDX_FILE  (string)"train-images.idx3-ubyte"
 #define  TRAIN_LABELS_IDX_FILE  (string)"train-labels.idx1-ubyte"
+#define  TEST_IMAGES_IDX_FILE   (string)"t10k-images.idx3-ubyte"
+#define  TEST_LABELS_IDX_FILE   (string)"t10k-labels.idx1-ubyte"
 
 /**
   Convert a 32-bit unsigned integer from big-endian to little-endian format.
@@ -146,9 +148,10 @@ ReadImageFromIdxToVector (
 **/
 void
 ReadMNIST_and_label (
-  DATA_SET  &DataSet,
-  LABELS    &LabelSet,
-  LABELS    &LabelsToRead
+  unsigned short  DataType,
+  DATA_SET        &DataSet,
+  LABELS          &LabelSet,
+  LABELS          &LabelsToRead
   )
 {
   ifstream      ImagesFile;
@@ -159,6 +162,8 @@ ReadMNIST_and_label (
   unsigned int  NumberOfRows = 0;
   unsigned int  NumberOfColumns = 0;
   unsigned int  NumberOfLabels = 0;
+  string        DataSetIdxFile;
+  string        LabelSetIdxFile;
 
   if (LabelsToRead.size() == 0) {
     throw runtime_error ("Error: No labels to read");
@@ -176,8 +181,9 @@ ReadMNIST_and_label (
   //
   // Open the image file.
   //
+  DataSetIdxFile = (DataType == TRAINING_DATA) ? TRAIN_IMAGES_IDX_FILE : TEST_IMAGES_IDX_FILE;
   ImagesFile = OpenIdxFile (
-                 ROOT_PATH + TRAIN_IMAGES_IDX_FILE,
+                 ROOT_PATH + DataSetIdxFile,
                  0x00000803,
                  ImagesFileHeader
                  );
@@ -192,8 +198,9 @@ ReadMNIST_and_label (
   //
   // Open the label file.
   //
+  LabelSetIdxFile = (DataType == TRAINING_DATA) ? TRAIN_LABELS_IDX_FILE : TEST_LABELS_IDX_FILE;
   LabelsFile = OpenIdxFile (
-                 ROOT_PATH + TRAIN_LABELS_IDX_FILE,
+                 ROOT_PATH + LabelSetIdxFile,
                  0x00000801,
                  LabelsFileHeader
                  );
@@ -219,7 +226,7 @@ ReadMNIST_and_label (
 
     LabelsFile.read ((char*)&LabelValue, sizeof(LabelValue));
 
-    if (!ValueInVector (LabelsToRead, (int)LabelValue)) {
+    if (!ValueInVector (LabelsToRead, (unsigned int)LabelValue)) {
       //
       // This is not the label we want, skip this image.
       //

@@ -20,12 +20,12 @@ using namespace std;
 **/
 bool
 ValueInVector (
-  vector<int>   &VectorToSearch,
-  int           Value,
-  unsigned int  *IndexInVector
+  vector<unsigned int>   &VectorToSearch,
+  unsigned int           Value,
+  unsigned int           *IndexInVector
   )
 {
-  for (int Index = 0; Index < (int)VectorToSearch.size(); Index++) {
+  for (unsigned int Index = 0; Index < (unsigned int)VectorToSearch.size(); Index++) {
     if (VectorToSearch[Index] == Value) {
       if (IndexInVector != NULL) {
         *IndexInVector = Index;
@@ -42,7 +42,6 @@ ValueInVector (
 
   @param[in]  VectorToSearch  The vector to be searched.
   @param[in]  Value           The value to search for.
-  @param[out] IndexInVector   The Index of the Value in VectorToSearch.
 
   @retval  true   The value is found in VectorToSearch.
   @retval  false  The value is not found in VectorToSearch.
@@ -50,8 +49,8 @@ ValueInVector (
 **/
 bool
 ValueInVector (
-  vector<int>   &VectorToSearch,
-  int           Value
+  vector<unsigned int>   &VectorToSearch,
+  unsigned int           Value
   )
 {
   return ValueInVector (VectorToSearch, Value, NULL);
@@ -103,8 +102,8 @@ GetMaxIndex (
 **/
 matrix
 ConvertOutputValueToMatrix (
-  int     DesireOutputLabel,
-  LABELS  &TrainLabels
+  int                   DesireOutputLabel,
+  vector<unsigned int>  &TrainLabels
   )
 {
   unsigned int  Index;
@@ -126,35 +125,4 @@ ConvertOutputValueToMatrix (
   DesireOutputMatrix.SetValue (Index, 0, 1.0);
 
   return DesireOutputMatrix;
-}
-
-/**
-  Convert an output vector to the corresponding label value.
-
-  This function converts an output vector to the corresponding label value.
-  The index of the maximum value in the output vector is used to determine the label.
-  The label corresponding to that index in TrainLabels is returned.
-
-  @param[in]   OutputVector  The output vector to be converted.
-  @param[in]   TrainLabels   The vector of training labels.
-
-  @return      The label value corresponding to the maximum value in OutputVector.
-
-  @throw       runtime_error  One of the following conditions is met:
-                                * No training labels are specified in TrainLabels.
-                                * Too many training labels are specified in TrainLabels.
-                                * The size of OutputVector does not match the size of TrainLabels.
-
-**/
-int
-ConvertOutputVectorToValue (
-  vector<double>  &OutputVector,
-  LABELS          &TrainLabels
-  )
-{
-  if (OutputVector.size() != TrainLabels.size()) {
-    throw runtime_error ("Error: Output vector size does not match training labels size.");
-  }
-
-  return TrainLabels[GetMaxIndex (OutputVector)];
 }

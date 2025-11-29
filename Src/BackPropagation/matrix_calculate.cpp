@@ -149,8 +149,9 @@ matrix add(const matrix &A, const matrix &B)
 {
   if ((A.getrow() != B.getrow()) ||
       (A.getcolumn() != B.getcolumn())) {
-    cout<<"The size of the two matrices should be the same!"<<endl;
-    exit(1);
+    DEBUG_LOG ("A size: " << A.getrow() << " * " << A.getcolumn()
+               << ", B size: " << B.getrow() << " * " << B.getcolumn());
+    throw invalid_argument ("add(): The size of the two matrices should be the same!");
   }
 
   int Row    = A.getrow();
@@ -184,8 +185,9 @@ matrix Substract(const matrix &A, const matrix &B)
 {
   if ((A.getrow() != B.getrow()) ||
       (A.getcolumn() != B.getcolumn())) {
-    cout<<"The size of the two matrices should be the same!"<<endl;
-    exit(1);
+    DEBUG_LOG ("A size: " << A.getrow() << " * " << A.getcolumn()
+               << ", B size: " << B.getrow() << " * " << B.getcolumn());
+    throw invalid_argument ("Substract(): The size of the two matrices should be the same!");
   }
 
   int Row    = A.getrow();
@@ -213,8 +215,9 @@ matrix  HadamardProduct (
 {
   if ((A.getrow() != B.getrow()) ||
       (A.getcolumn() != B.getcolumn())) {
-    cout<<"The size of the two matrices should be the same!"<<endl;
-    exit(1);
+    DEBUG_LOG ("A size: " << A.getrow() << " * " << A.getcolumn()
+               << ", B size: " << B.getrow() << " * " << B.getcolumn());
+    throw invalid_argument ("HadamardProduct(): The size of the two matrices should be the same!");
   }
 
   int Row    = A.getrow();

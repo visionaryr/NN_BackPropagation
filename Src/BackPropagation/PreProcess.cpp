@@ -24,7 +24,7 @@ PixelBinarization (
 **/
 void
 DataBinarization (
-  DATA_SET  &DataSet
+  vector<matrix>  &DataSet
   )
 {
   function<double(double)> Binarization = PixelBinarization;

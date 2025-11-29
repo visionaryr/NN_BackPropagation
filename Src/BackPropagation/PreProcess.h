@@ -3,6 +3,8 @@
 
 #include "BpMisc.h"
 
+#include <vector>
+
 /**
   Binarize the pixel values in the dataset.
 
@@ -15,7 +17,7 @@
 **/
 void
 DataBinarization (
-  DATA_SET  &DataSet
+  std::vector<matrix>  &DataSet
   );
 
 #endif

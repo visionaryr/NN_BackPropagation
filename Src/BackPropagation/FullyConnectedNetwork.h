@@ -35,6 +35,7 @@ class FullyConnectedNetwork
     void PerturbWeight ();
 
     void Forward (const matrix &);
+    unsigned int Predict (const matrix &);
 
   private:
     void InitNodeActivation ();
