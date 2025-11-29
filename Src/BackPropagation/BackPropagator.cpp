@@ -2,8 +2,76 @@
 #include "DebugLib.h"
 
 #include <set>
+#include <cmath>
 
 using namespace std;
+
+#define  MAX_EPOCHS_TO_TRACK_LOSS  10
+#define  SHAKE_WEIGHT_THRESHOLD    0.001
+
+/**
+  Calculate the standard deviation of a vector of double values.
+
+  @param[in]  Values   A vector of double values.
+
+  @retval   The standard deviation of the input values.
+
+  @throws   std::invalid_argument  If the input vector is empty or has less than 2 values.
+  @throws   std::runtime_error     If the input vector contains NaN or Inf values,
+                                   or if the standard deviation calculation results in NaN or Inf.
+**/
+double
+CalculateStandardDeviation (
+  const vector<double>& Values
+  )
+{
+  if (Values.empty()) {
+    throw std::invalid_argument("Input vector is empty. Cannot calculate standard deviation of an empty vector.");
+  }
+  
+  if (Values.size() == 1) {
+    throw std::invalid_argument("Input vector must contain at least 2 values to calculate standard deviation.");
+  }
+
+  //
+  // Check for NaN or Inf values
+  //
+  for (size_t Index = 0; Index < Values.size(); ++Index) {
+    if (std::isnan(Values[Index]) || std::isinf(Values[Index])) {
+      throw std::runtime_error("Input vector contains NaN or Inf values.");
+    }
+  }
+
+  //
+  // Calculate mean
+  //
+  double Sum = 0.0;
+  for (size_t Index = 0; Index < Values.size(); ++Index) {
+    Sum += Values[Index];
+  }
+  double Mean = Sum / Values.size();
+
+  //
+  // Calculate variance
+  //
+  double Variance = 0.0;
+  for (size_t Index = 0; Index < Values.size(); ++Index) {
+    double Diff = Values[Index] - Mean;
+    Variance += Diff * Diff;
+  }
+  Variance /= Values.size();
+
+  //
+  // Calculate and return standard deviation
+  //
+  double StdDev = std::sqrt(Variance);
+  
+  if (std::isnan(StdDev) || std::isinf(StdDev)) {
+    throw std::runtime_error("Standard deviation calculation resulted in NaN or Inf.");
+  }
+  
+  return StdDev;
+}
 
 /**
   Constructor for BackPropagator class.
@@ -238,9 +306,11 @@ BackPropagator::Train (
 
   ShowTrainingParams ();
 
-  double        EpochLoss;
-  clock_t       StartTime;
-  clock_t       EndTime;
+  double          EpochLoss;
+  clock_t         StartTime;
+  clock_t         EndTime;
+  vector<double>  Last10EpochsLoss;
+  double          StdDev = 0.0;
 
   for (unsigned int Epoch = 1; Epoch <= Epochs; Epoch++) {
     StartTime = clock ();
@@ -255,17 +325,46 @@ BackPropagator::Train (
 
     EndTime = clock ();
 
-    cout << "Epoch #" << Epoch << ": " << endl;
-    cout << "  Loss = " << EpochLoss << endl;
-    cout << "  Consume time = " << (double)(EndTime - StartTime) / CLOCKS_PER_SEC << " seconds" << endl;
-
     if (EpochLoss < TargetLoss) {
       DEBUG_LOG ("Loss of this epoch is lower than target loss(" << TargetLoss << ")");
       break;
     }
 
     //
-    // TODO: Preturb(shake) weights if loss between each rounds doesn't have much difference.
+    // Calculate the standard deviation of the loss over the last 10 epochs.
     //
+    Last10EpochsLoss.push_back (EpochLoss);
+
+    if (Last10EpochsLoss.size() > MAX_EPOCHS_TO_TRACK_LOSS) {
+      Last10EpochsLoss.erase(Last10EpochsLoss.begin());
+    }
+
+    //
+    // Calculate standard deviation when you have at least 2 values
+    //
+    if (Last10EpochsLoss.size () >= 2) {
+      try {
+        StdDev = CalculateStandardDeviation (Last10EpochsLoss);
+      }
+      catch (const std::exception& Exception) {
+        cerr << "Error calculating standard deviation: " << Exception.what() << endl;
+      }
+    }
+
+    cout << "Epoch #" << Epoch << ": " << endl;
+    cout << "  Loss = " << EpochLoss << endl;
+    cout << "  Consume time = " << (double)(EndTime - StartTime) / CLOCKS_PER_SEC << " seconds" << endl;
+    if (Last10EpochsLoss.size () >= 2) {
+      cout << "  StdDev of last " << Last10EpochsLoss.size() << " epochs loss = " << StdDev << endl;
+    }
+
+    //
+    // If standard deviation is smaller than threshold, means loss hasn't
+    // change much in last 10 epochs, shake weights.
+    //
+    if ((StdDev < SHAKE_WEIGHT_THRESHOLD) &&
+        (StdDev != 0.0)) {
+      Network.PerturbWeight();
+    }
   }
 }
