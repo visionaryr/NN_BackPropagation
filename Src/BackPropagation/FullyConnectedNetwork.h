@@ -3,7 +3,7 @@
 
 #include "matrix.h"
 #include "Activation.h"
-// #include "bp.h"
+#include "ComputationContext.h"
 
 #include <string>
 #include <vector>
@@ -23,22 +23,17 @@ class FullyConnectedNetwork
     void ShowInfo(bool);
 
     std::vector<unsigned int> GetLayout () const;
-
-    void SetNodeActivation (unsigned int, unsigned int, double);
-    matrix GetActivationByLayer (unsigned int) const;
-    matrix GetDerivativeActivationByLayer (unsigned int);
-    void PrintActivationInLayer (unsigned int);
+    ACTIVATION_TYPE  GetActivationType () const;
   
     matrix GetWeightByLayer (unsigned int) const;
     void UpdateWeight (unsigned int, const matrix &); // Update by specific layer number.
     void UpdateWeight (const std::vector<matrix> &); // Update by all layers.
     void PerturbWeight ();
 
-    void Forward (const matrix &);
+    void Forward (const matrix &, ComputationContext &);
     unsigned int Predict (const matrix &);
 
   private:
-    void InitNodeActivation ();
     void WeightsRandomize();
     double RandValue(); // Generate a random double value between -1.0 and 1.0.
     void WeightsMatrixInit(bool);// Initialize weight matrix between each layers based on Layout
@@ -46,7 +41,6 @@ class FullyConnectedNetwork
     //
     // Data Members
     //
-    std::vector<matrix> NodeActivation;
     std::vector<matrix> Weights;
     NETWORK_LAYOUT      Layout;
 

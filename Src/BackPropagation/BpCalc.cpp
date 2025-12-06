@@ -6,6 +6,21 @@
 using namespace std;
 
 /**
+
+**/
+static
+matrix
+CalculateDerivativeActivation (
+  const matrix     Activation,
+  ACTIVATION_TYPE  ActivationType
+  )
+{
+  function<double (double)>  DerivativeActivation = GetDeriativeActivationFunction (ActivationType);
+
+  return Activation.ApplyElementWise (DerivativeActivation);
+}
+
+/**
   Calculate the delta value of each node in the last(output) layer.
   Delta = (Desired - Actual) * f'(Actual), where f(x) is the activation function and
   f'(x) is the derivative of activation function.
@@ -15,22 +30,29 @@ using namespace std;
 **/
 matrix
 BackPropagator::CalculateLastLayerDelta (
-  matrix  DesiredOutput
+  const matrix        &DesiredOutput,
+  ComputationContext  &Context
   )
 {
   matrix        DesiredGap;
   unsigned int  LastLayerIndex;
+  matrix        DerivativeActivation;
 
   LastLayerIndex = (unsigned int)(Network.GetLayout().size() - 1);
 
   DesiredGap = Substract (
                  DesiredOutput,
-                 Network.GetActivationByLayer (LastLayerIndex)
+                 Context.GetActivationByLayer (LastLayerIndex)
                  );
+
+  DerivativeActivation = CalculateDerivativeActivation (
+                           Context.GetActivationByLayer (LastLayerIndex),
+                           Network.GetActivationType ()
+                           );
 
   return HadamardProduct (
            DesiredGap,
-           Network.GetDerivativeActivationByLayer (LastLayerIndex)
+           DerivativeActivation
            );
 }
 
@@ -44,10 +66,12 @@ BackPropagator::CalculateLastLayerDelta (
 **/
 matrix
 BackPropagator::CalculateMidLayerDelta (
-  unsigned int  Layer
+  unsigned int        Layer,
+  ComputationContext  &Context
   )
 {
   matrix  WeightedError;
+  matrix  DerivativeActivation;
 
   if (Layer > (unsigned int)(Network.GetLayout().size() - 2)) {
     DEBUG_LOG ("Layer " << Layer << " is not a middle layer.");
@@ -56,12 +80,17 @@ BackPropagator::CalculateMidLayerDelta (
 
   WeightedError = multiply (
                     transpose (Network.GetWeightByLayer(Layer)),
-                    NodeDelta[Layer + 1]
+                    Context.GetNodeDeltaByLayer (Layer + 1)
                     );
+
+  DerivativeActivation = CalculateDerivativeActivation (
+        Context.GetActivationByLayer (Layer),
+        Network.GetActivationType ()
+        );
 
   return HadamardProduct (
            WeightedError,
-           Network.GetDerivativeActivationByLayer (Layer)
+           DerivativeActivation
            );
 }
 
@@ -71,15 +100,17 @@ BackPropagator::CalculateMidLayerDelta (
   @param[in]  DesiredOutput  A matrix representing the desired output values.
 
 **/
-void BackPropagator::NodeDeltaCalculation (
-  const matrix  &DesiredOutput
+void
+BackPropagator::NodeDeltaCalculation (
+  const matrix        &DesiredOutput,
+  ComputationContext  &Context
   )
 {
   matrix        NodeDeltaOfLayer;
   unsigned int  LastLayerIndex = (unsigned int)(Network.GetLayout().size() - 1);
 
-  NodeDeltaOfLayer = CalculateLastLayerDelta (DesiredOutput);
-  NodeDelta[LastLayerIndex] = NodeDeltaOfLayer;
+  NodeDeltaOfLayer = CalculateLastLayerDelta (DesiredOutput, Context);
+  Context.SetActivationByLayer (LastLayerIndex, NodeDeltaOfLayer);
 
   //
   // Calculate delta for all nodes in all layer except last layer.
@@ -88,8 +119,8 @@ void BackPropagator::NodeDeltaCalculation (
   for (unsigned int LayerIdx = LastLayerIndex - 1;
        LayerIdx > 0;
        LayerIdx--) {
-    NodeDeltaOfLayer = CalculateMidLayerDelta (LayerIdx);
-    NodeDelta[LayerIdx] = NodeDeltaOfLayer;
+    NodeDeltaOfLayer = CalculateMidLayerDelta (LayerIdx, Context);
+    Context.SetNodeDeltaByLayer (LayerIdx, NodeDeltaOfLayer);
   }
 
   // DEBUG_START()
@@ -100,27 +131,24 @@ void BackPropagator::NodeDeltaCalculation (
 /**
   Calculate the delta value of each node in all layers except the first(input) layer.
 
-  @param[in]  DesiredOutput  A matrix representing the desired output values.
-
 **/
 void
 BackPropagator::DeltaWeightsCalculation (
-  double  LearningRate
+  vector<matrix>      DeltaWeights,
+  ComputationContext  &Context
   )
 {
   unsigned int  WeightsLayerCount = ((unsigned int)Network.GetLayout().size() - 1);
 
-  DeltaWeights.clear();
-
   for (unsigned int LayerIdx = 0; LayerIdx < WeightsLayerCount; LayerIdx++) {
-    matrix  CurrentLayerActivation_T = transpose (Network.GetActivationByLayer (LayerIdx));
-    matrix  NextLayerDelta           = NodeDelta[LayerIdx + 1];
+    matrix  CurrentLayerActivation_T = transpose (Context.GetActivationByLayer (LayerIdx));
+    matrix  NextLayerDelta           = Context.GetNodeDeltaByLayer (LayerIdx + 1);
 
     matrix  Gradient = multiply (NextLayerDelta, CurrentLayerActivation_T);
   
     matrix  DeltaWeight = multiplyBy (Gradient, LearningRate);
 
-    DeltaWeights.push_back (DeltaWeight);
+    DeltaWeights[LayerIdx] = add (DeltaWeights[LayerIdx], DeltaWeight);
   }
 }
 
@@ -149,7 +177,7 @@ BackPropagator::UpdateWeights (
 **/
 void
 BackPropagator::UpdateBatchDeltaWeights (
-  void
+  vector<matrix>  &DeltaWeights
   )
 {
   if (DeltaWeights.size() != BatchDeltaWeights.size()) {
@@ -201,15 +229,14 @@ BackPropagator::AverageBatchDeltaWeights (
 **/
 void
 BackPropagator::BackwardPass (
-  const matrix &DesiredOutput,
-  const double LearningRate
+  const matrix        &DesiredOutput,
+  vector<matrix>      &DeltaWeights,
+  ComputationContext  &Context
   )
 {
-  NodeDeltaCalculation (DesiredOutput);
+  NodeDeltaCalculation (DesiredOutput, Context);
 
-  DeltaWeightsCalculation (LearningRate);
-
-  UpdateBatchDeltaWeights ();
+  DeltaWeightsCalculation (DeltaWeights, Context);
 }
 
 double
@@ -232,7 +259,8 @@ InternalSquare (
 **/
 double
 BackPropagator::LossMeanSquareError (
-  const matrix  &DesiredOutput
+  const matrix        &DesiredOutput,
+  ComputationContext  &Context
   )
 {
   matrix                   DesiredGap;
@@ -240,7 +268,7 @@ BackPropagator::LossMeanSquareError (
 
   DesiredGap = Substract (
                  DesiredOutput,
-                 Network.GetActivationByLayer (Network.GetLayout().size() - 1)
+                 Context.GetActivationByLayer (Network.GetLayout().size() - 1)
                  );
 
   return DesiredGap.ApplyElementWise (Square).Sum() / DesiredOutput.getrow();

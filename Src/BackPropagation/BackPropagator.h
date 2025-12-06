@@ -3,9 +3,11 @@
 
 #include "matrix.h"
 #include "FullyConnectedNetwork.h"
+#include "ThreadPool.h"
 
 #include <vector>
 #include <functional>
+#include <mutex>
 
 typedef enum {
   BATCH_MODE = 0,
@@ -52,32 +54,34 @@ class BackPropagator
       );
 
   private:
-    void InitNodeDelta ();
-    void InitDeltaWeights ();
-    void SetNodeDelta (
-      unsigned int  Layer,
-      unsigned int  Number,
-      double        Delta
-      );
-    void PrintNodeDelta (); // Only internal debug use.
-    void PrintDeltaWeights (); // Only internal debug use.
-
-    void NodeDeltaCalculation (
-      const matrix &DesiredOutput
-     );
-    matrix  CalculateLastLayerDelta (
-      matrix  DesiredOutput
-      );
-    matrix  CalculateMidLayerDelta (
-      unsigned int  Layer
+    void
+    NodeDeltaCalculation (
+      const matrix        &DesiredOutput,
+      ComputationContext  &Context
       );
 
-    void  DeltaWeightsCalculation (
-      const double  LearningRate
+    matrix
+    CalculateLastLayerDelta (
+      const matrix        &DesiredOutput,
+      ComputationContext  &Context
       );
-    void BackwardPass (
-      const matrix &DesiredOutput,
-      const double LearningRate
+    matrix
+    CalculateMidLayerDelta (
+      unsigned int        Layer,
+      ComputationContext  &Context
+      );
+
+    void
+    DeltaWeightsCalculation (
+      vector<matrix>      DeltaWeights,
+      ComputationContext  &Context
+      );
+
+    void
+    BackwardPass (
+      const matrix        &DesiredOutput,
+      vector<matrix>      &DeltaWeights,
+      ComputationContext  &Context
       );
 
     void  UpdateWeights (
@@ -96,7 +100,7 @@ class BackPropagator
 
     void
     UpdateBatchDeltaWeights (
-      void
+      vector<matrix>  &DeltaWeights
       );
 
     void
@@ -104,27 +108,34 @@ class BackPropagator
       unsigned int  TotalTrainDataSetCount
     );
 
-    double  LossMeanSquareError (
-      const matrix &DesiredOutput
+    double
+    LossMeanSquareError (
+      const matrix        &DesiredOutput,
+      ComputationContext  &Context
       );
 
-    double  TrainOneData (
-      const matrix  &InputData,
-      const matrix  &DesiredOutput,
-      const double  LearningRate
+    double
+    TrainOneData (
+      const matrix        &InputData,
+      const matrix        &DesiredOutput,
+      vector<matrix>      &DeltaWeights,
+      ComputationContext  &Context
+      );
+
+    void  TrainOneSubBatch (
+      const std::vector<matrix>        &InputData,
+      const std::vector<matrix>        &DesiredOutput,
+      const std::vector<unsigned int>  IndexToTrain
       );
 
     double  TrainOneEpoch (
       const std::vector<matrix>  &InputData,
-      const std::vector<matrix>  &DesiredOutput,
-      const double               LearningRate
+      const std::vector<matrix>  &DesiredOutput
       );
 
     // std::optional<std::reference_wrapper<FullyConnectedNetwork>>  Network;
     FullyConnectedNetwork          &Network;
 
-    std::vector<matrix>            NodeDelta;
-    std::vector<matrix>            DeltaWeights;
     std::vector<matrix>            BatchDeltaWeights;
 
     //
@@ -135,11 +146,78 @@ class BackPropagator
       void
       );
 
+    //
+    // Temp data during training process.
+    //
+    double  EpochLoss;
+
+    //
+    // Training parameters.
+    //
     double                 LearningRate;
     unsigned int           Epochs;
     double                 TargetLoss;
     TRAINING_MODE          TrainingMode;
     unsigned int           BatchSize;
+
+    //
+    // Multi-threading computation of training.
+    //
+    ThreadPool  TrainingThreads;
+    std::mutex  DeltaWeightsMutex;
 };
+
+/**
+  Calculate the standard deviation of a vector of double values.
+
+  @param[in]  Values   A vector of double values.
+
+  @retval   The standard deviation of the input values.
+
+  @throws   std::invalid_argument  If the input vector is empty or has less than 2 values.
+  @throws   std::runtime_error     If the input vector contains NaN or Inf values,
+                                   or if the standard deviation calculation results in NaN or Inf.
+**/
+double
+CalculateStandardDeviation (
+  const std::vector<double>&  Values
+  );
+
+/**
+  Generate a vector containing unique integers in the range [0, MaxNumber-1]
+  in a random order.
+
+  @param[in]  MaxNumber  The exclusive upper bound of generated numbers.
+
+  @return A vector<unsigned int> containing all integers from 0 to MaxNumber-1,
+          shuffled randomly.
+
+  @throws std::invalid_argument If MaxNumber == 0.
+  @throws std::runtime_error    If the RNG produces an error (very unlikely).
+
+**/
+std::vector<unsigned int>
+GenerateUniqueRandomSequence (
+  unsigned int MaxNumber
+  );
+
+/**
+  Extract a sub-vector of indices from TrainSequence based on 
+  a start and end index.
+
+  @param[in]  TrainSequence  A vector of unsigned int indices (training order).
+  @param[in]  StartIndex     The start position in TrainSequence (inclusive).
+  @param[in]  EndIndex       The end position in TrainSequence (exclusive).
+
+  @return A vector<unsigned int> containing the sub-sequence of indices.
+
+  @throws std::invalid_argument If indices are out of range or invalid.
+**/
+std::vector<unsigned int>
+ExtractSubVectorFromTrainSequence (
+  const std::vector<unsigned int> &TrainSequence,
+  unsigned int                     StartIndex,
+  unsigned int                     EndIndex
+  );
 
 #endif

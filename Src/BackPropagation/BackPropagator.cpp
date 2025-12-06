@@ -2,12 +2,325 @@
 #include "DebugLib.h"
 
 #include <set>
+#include <algorithm>
+#include <random>
 #include <cmath>
 
 using namespace std;
 
 #define  MAX_EPOCHS_TO_TRACK_LOSS  10
 #define  SHAKE_WEIGHT_THRESHOLD    0.001
+
+/**
+  Constructor for BackPropagator class.
+
+  @param  FCN   A reference to a FullyConnectedNetwork object to be associated with this BackPropagator.
+
+**/
+BackPropagator::BackPropagator (
+  FullyConnectedNetwork &FCN
+  ) : Network (FCN)
+{
+  EpochLoss = 0.0;
+
+  InitTrainingParams ();
+}
+
+/**
+
+**/
+void
+BackPropagator::InitBatchDeltaWeights (
+  void
+  )
+{
+  vector<unsigned int> Layout = Network.GetLayout ();
+
+  BatchDeltaWeights.clear();
+
+  for (unsigned int Index = 0; Index < (unsigned int)Layout.size() - 1; Index++) {
+    matrix LayerDeltaWeights (Layout[Index + 1], Layout[Index]);
+    BatchDeltaWeights.push_back (LayerDeltaWeights);
+  }
+}
+
+/**
+  Initialize training mode related settings.
+  No initialization is required for PATTERN_MODE.
+
+**/
+void
+BackPropagator::InitTrainingMode (
+  void
+  )
+{
+  InitBatchDeltaWeights ();
+}
+
+/**
+  Train the network with one data sample, including forward pass and backward pass.
+
+  @param[in]  InputData     A matrix representing the input data.
+  @param[in]  DesiredOutput A matrix representing the desired output values.
+
+  @return A double representing the loss value after training with this data sample.
+
+**/
+double
+BackPropagator::TrainOneData (
+  const matrix        &InputData,
+  const matrix        &DesiredOutput,
+  vector<matrix>      &DeltaWeights,
+  ComputationContext  &Context
+  )
+{
+  double  Loss;
+
+  Network.Forward (InputData, Context);
+
+  Loss = LossMeanSquareError (DesiredOutput, Context);
+
+  BackwardPass (DesiredOutput, DeltaWeights, Context);
+
+  return Loss;
+}
+
+/**
+
+**/
+void
+BackPropagator::TrainOneSubBatch (
+  const vector<matrix>        &InputData,
+  const vector<matrix>        &DesiredOutput,
+  const vector<unsigned int>  IndexToTrain
+  )
+{
+  NETWORK_LAYOUT      Layout = Network.GetLayout ();
+  ComputationContext  Context (Layout);
+  double              TotalLoss;
+  unsigned int        DataIndex;
+  vector<matrix>      DeltaWeights;
+
+
+  //
+  // Initialize Delta Weights.
+  //
+  for(unsigned int Index = 0; Index < (unsigned int)Layout.size() - 1; Index++) {
+    matrix LayerDeltaWeights (Layout[Index + 1], Layout[Index]);
+    DeltaWeights.push_back (LayerDeltaWeights);
+  }
+
+  TotalLoss = 0.0;
+  for (unsigned int Index = 0; Index < (unsigned int)IndexToTrain.size(); Index++) {
+    DataIndex = IndexToTrain[Index];
+    TotalLoss += TrainOneData (
+                   InputData[DataIndex],
+                   DesiredOutput[DataIndex],
+                   DeltaWeights,
+                   Context
+                   );
+  }
+
+  unique_lock<mutex> lock (DeltaWeightsMutex);
+  UpdateBatchDeltaWeights (DeltaWeights);
+  EpochLoss += TotalLoss;
+
+  DEBUG_LOG ("Sub-batch trained with " << IndexToTrain.size() << " samples, Sub-batch loss = " << TotalLoss);
+}
+
+/**
+  Train the network for one epoch over the entire dataset.
+
+  @param[in]  InputDataSet     A vector of matrices representing the input data samples.
+  @param[in]  DesiredOutputSet A vector of matrices representing the desired output values for each sample.
+  @param[in]  LearningRate     A double representing the learning rate for weight updates.
+
+  @return A double representing the average loss over the epoch.
+
+**/
+double
+BackPropagator::TrainOneEpoch (
+  const vector<matrix> &InputDataSet,
+  const vector<matrix> &DesiredOutputSet
+  )
+{
+  vector<unsigned int>  TrainSequence;
+  unsigned int          NumOfThreads;
+
+  EpochLoss = 0.0;
+
+  NumOfThreads = TrainingThreads.GetNumOfThreads ();
+
+  DEBUG_LOG ("Number of threads for training: " << NumOfThreads);
+
+  //
+  // Step 1:
+  //   Generate training order randomly.
+  //   This is to make sure training between each epoch is running in different sequence.
+  //
+  TrainSequence = GenerateUniqueRandomSequence (InputDataSet.size());
+  DEBUG_LOG ("Training sequence size = " << TrainSequence.size());
+
+  for (unsigned int BatchStartIndex = 0; BatchStartIndex < TrainSequence.size(); BatchStartIndex += BatchSize) {
+    //
+    // Step 2:
+    //   Divide one batch into multiple sub-batches for multi-threading training.
+    //
+    
+    // Ensure last partial batch doesn't pass the end
+    unsigned int BatchEndIndex = std::min(BatchStartIndex + BatchSize, (unsigned int)TrainSequence.size());
+    unsigned int BatchLen = BatchEndIndex - BatchStartIndex; // actual number of elements in this batch
+
+    DEBUG_LOG ("Processing batch from index " << BatchStartIndex << " to " << BatchEndIndex - 1 << " , length = " << BatchLen); 
+    if (BatchLen == 0) {
+      break; // nothing to do
+    }
+
+    // Distribute BatchLen across threads as evenly as possible
+    unsigned int BaseSubBatchSize = BatchLen / NumOfThreads;
+    unsigned int Extra = BatchLen % NumOfThreads; // first 'Extra' threads get +1
+
+    for (unsigned int ThreadId = 0; ThreadId < NumOfThreads; ++ThreadId) {
+      // compute start offset in the batch for this thread
+      unsigned int OffsetBefore = ThreadId * BaseSubBatchSize + std::min(ThreadId, Extra);
+      unsigned int SubStartIndex = BatchStartIndex + OffsetBefore;
+
+      // compute how many elements this thread should process
+      unsigned int ThisSubBatchSize = BaseSubBatchSize + (ThreadId < Extra ? 1u : 0u);
+
+      // compute end index (exclusive) and clamp to BatchEndIndex to be safe
+      unsigned int SubEndIndex = std::min(SubStartIndex + ThisSubBatchSize, BatchEndIndex);
+
+      // If no work for this thread, continue
+      if (SubStartIndex >= SubEndIndex) {
+        continue;
+      }
+
+      DEBUG_LOG ("  Thread #" << ThreadId << ": processing sub-batch from index " << SubStartIndex << " to " << SubEndIndex - 1);
+
+      vector<unsigned int>  IndexToTrain;
+
+      IndexToTrain = ExtractSubVectorFromTrainSequence (
+                      TrainSequence,
+                      SubStartIndex,
+                      SubEndIndex
+                      );
+
+      //
+      // Step 3:
+      //   Enqueue training of each sub-batch task into the task queue of ThreadPool.
+      //
+      auto task = [this, InputDataSet, DesiredOutputSet, IndexToTrain]() mutable {
+        // When this lambda is called, it executes the worker function
+        // using the values it captured.
+        this->TrainOneSubBatch(InputDataSet, DesiredOutputSet, IndexToTrain);
+      };
+
+      // The lambda captures (copies) sub_X and sub_Y, making them part of the task object.
+      DEBUG_LOG ("Enqueuing sub-batch task...");
+      TrainingThreads.Enqueue(task);
+      DEBUG_LOG ("Sub-batch task enqueued.");
+    }
+
+    //
+    // Step 4:
+    //   Wait until training of all sub-batch is complete.
+    //
+    DEBUG_LOG ("Waiting for all sub-batch tasks to complete...");
+    TrainingThreads.WaitForAllTasksDone ();
+
+    //
+    // Step 5:
+    //   Average the batch delta weights and update the network weights.
+    //
+    DEBUG_LOG ("Averaging batch delta weights and updating network weights...");
+    AverageBatchDeltaWeights (BatchLen);
+    UpdateWeights (BatchDeltaWeights);
+  }
+
+  return (double)(EpochLoss / InputDataSet.size());
+}
+
+void
+BackPropagator::Train (
+  vector<matrix>  &InputDataSet,
+  vector<matrix>  &DesiredOutputSet
+  )
+{
+  if (InputDataSet.size() != DesiredOutputSet.size()) {
+    DEBUG_LOG (__FUNCTION__ << ": InputData count = " << InputDataSet.size() << ", DesiredOutput count = " << DesiredOutputSet.size());
+    throw runtime_error ("Amount of InputData and DesiredOutput isn't match.");
+  }
+  if (BatchSize > (unsigned int)InputDataSet.size()) {
+    DEBUG_LOG (__FUNCTION__ << ": Batch size = " << BatchSize << ", InputData count = " << InputDataSet.size());
+    throw runtime_error ("Batch size can't be larger than total training data set size.");
+  }
+
+  InitTrainingMode ();
+
+  ShowTrainingParams ();
+
+  double          EpochLoss;
+  clock_t         StartTime;
+  clock_t         EndTime;
+  vector<double>  Last10EpochsLoss;
+  double          StdDev = 0.0;
+
+  for (unsigned int Epoch = 1; Epoch <= Epochs; Epoch++) {
+    StartTime = clock ();
+  
+    cout << "Training Epoch #" << Epoch << endl;
+
+    EpochLoss = TrainOneEpoch (
+                  InputDataSet,
+                  DesiredOutputSet
+                  );
+
+    EndTime = clock ();
+
+    if (EpochLoss < TargetLoss) {
+      DEBUG_LOG ("Loss of this epoch is lower than target loss(" << TargetLoss << ")");
+      break;
+    }
+
+    //
+    // Calculate the standard deviation of the loss over the last 10 epochs.
+    //
+    Last10EpochsLoss.push_back (EpochLoss);
+
+    if (Last10EpochsLoss.size() > MAX_EPOCHS_TO_TRACK_LOSS) {
+      Last10EpochsLoss.erase(Last10EpochsLoss.begin());
+    }
+
+    //
+    // Calculate standard deviation when you have at least 2 values
+    //
+    if (Last10EpochsLoss.size () >= 2) {
+      try {
+        StdDev = CalculateStandardDeviation (Last10EpochsLoss);
+      }
+      catch (const std::exception& Exception) {
+        cerr << "Error calculating standard deviation: " << Exception.what() << endl;
+      }
+    }
+
+    cout << "Epoch #" << Epoch << ": " << endl;
+    cout << "  Loss = " << EpochLoss << endl;
+    cout << "  Consume time = " << (double)(EndTime - StartTime) / CLOCKS_PER_SEC << " seconds" << endl;
+    if (Last10EpochsLoss.size () >= 2) {
+      cout << "  StdDev of last " << Last10EpochsLoss.size() << " epochs loss = " << StdDev << endl;
+    }
+
+    //
+    // If standard deviation is smaller than threshold, means loss hasn't
+    // change much in last 10 epochs, shake weights.
+    //
+    if ((StdDev < SHAKE_WEIGHT_THRESHOLD) &&
+        (StdDev != 0.0)) {
+      Network.PerturbWeight();
+    }
+  }
+}
 
 /**
   Calculate the standard deviation of a vector of double values.
@@ -74,299 +387,93 @@ CalculateStandardDeviation (
 }
 
 /**
-  Constructor for BackPropagator class.
+  Generate a vector containing unique integers in the range [0, MaxNumber-1]
+  in a random order.
 
-  @param  FCN   A reference to a FullyConnectedNetwork object to be associated with this BackPropagator.
+  @param[in]  MaxNumber  The exclusive upper bound of generated numbers.
 
-**/
-BackPropagator::BackPropagator (
-  FullyConnectedNetwork &FCN
-  ) : Network (FCN)
-{
-  InitNodeDelta ();
+  @return A vector<unsigned int> containing all integers from 0 to MaxNumber-1,
+          shuffled randomly.
 
-  InitTrainingParams ();
-}
-
-/**
-  Initialize delta values of each layer to zero.
+  @throws std::invalid_argument If MaxNumber == 0.
+  @throws std::runtime_error    If the RNG produces an error (very unlikely).
 
 **/
-void
-BackPropagator::InitNodeDelta ()
-{
-  vector<unsigned int> Layout = Network.GetLayout ();
-
-  for(int Index = 0; Index < (int)Layout.size(); Index++) {
-    matrix LayerDelta (Layout[Index], 1);
-    NodeDelta.push_back (LayerDelta);
-  }
-}
-
-/**
-  Set the delta value of a specific node in a specific layer.
-
-  @param  Layer   An unsigned integer representing the layer index.
-  @param  Number  An unsigned integer representing the node index within the layer.
-  @param  Delta   A double representing the delta value to be set for the specified node.
-
-  @throw std::runtime_error if the Layer or Number index is out of range.
-
-**/
-void BackPropagator::SetNodeDelta (
-  unsigned int Layer,
-  unsigned int Number,
-  double       Delta
+vector<unsigned int>
+GenerateUniqueRandomSequence (
+  unsigned int MaxNumber
   )
 {
-  vector<unsigned int> Layout = Network.GetLayout ();
-
-  if (Layer >= (unsigned int)Layout.size()) {
-    DEBUG_LOG ("Layer: " << Layer << ", Layout size: " << Layout.size());
-    throw std::runtime_error("Error: Layer index out of range in SetNodeDelta().");
-  }
-  if (Number >= (unsigned int)Layout[Layer]) {
-    DEBUG_LOG ("Number: " << Number << ", Nodes in layer: " << Layout[Layer]);
-    throw std::runtime_error("Error: Node number index out of range in SetNodeDelta().");
+  if (MaxNumber == 0) {
+    throw std::invalid_argument("MaxNumber must be greater than 0.");
   }
 
-  NodeDelta[Layer].SetValue (Number, 0, Delta);
-}
-
-/**
-  [**Only for internal debug use**]
-  Print the delta values of all nodes in each layer.
-
-**/
-void
-BackPropagator::PrintNodeDelta(
-  void
-  )
-{
-  for(int Index = 0; Index < (int)NodeDelta.size(); Index++) {
-    cout << "Delta in layer " << Index<< ":" <<endl;
-    NodeDelta[Index].show();
+  // Prepare the sequential list 0..MaxNumber-1
+  vector<unsigned int> Sequence;
+  Sequence.reserve(MaxNumber);
+  for (unsigned int Index = 0; Index < MaxNumber; ++Index) {
+    Sequence.push_back(Index);
   }
-}
 
-/**
-  [**Only for internal debug use**]
-  Print the delta weights between each layers.
-
-**/
-void
-BackPropagator::PrintDeltaWeights(
-  void
-  )
-{
-  for(int Index = 0; Index < (int)DeltaWeights.size(); Index++) {
-    cout << "Delta weights between layer" << Index << " and layer " << Index + 1 << endl;
-    DeltaWeights[Index].show();
+  // Shuffle using a non-deterministic random device where available
+  try {
+    std::random_device RandomDev;
+    std::mt19937 Generator(RandomDev());
+    std::shuffle(Sequence.begin(), Sequence.end(), Generator);
   }
-}
-
-/**
-  Initialize delta weights between each layers to zero.
-
-**/
-void BackPropagator::InitDeltaWeights ()
-{
-  vector<unsigned int> Layout = Network.GetLayout ();
-
-  for(unsigned int Index = 0; Index < (unsigned int)Layout.size() - 1; Index++) {
-    matrix LayerDeltaWeights (Layout[Index + 1], Layout[Index]);
-    DeltaWeights.push_back (LayerDeltaWeights);
-  }
-}
-
-/**
-
-**/
-void
-BackPropagator::InitBatchDeltaWeights (
-  void
-  )
-{
-  vector<unsigned int> Layout = Network.GetLayout ();
-
-  BatchDeltaWeights.clear();
-
-  for (unsigned int Index = 0; Index < (unsigned int)Layout.size() - 1; Index++) {
-    matrix LayerDeltaWeights (Layout[Index + 1], Layout[Index]);
-    BatchDeltaWeights.push_back (LayerDeltaWeights);
-  }
-}
-
-/**
-  Initialize training mode related settings.
-  No initialization is required for PATTERN_MODE.
-
-**/
-void
-BackPropagator::InitTrainingMode (
-  void
-  )
-{
-  InitBatchDeltaWeights ();
-}
-
-/**
-  Train the network with one data sample, including forward pass and backward pass.
-
-  @param[in]  InputData     A matrix representing the input data.
-  @param[in]  DesiredOutput A matrix representing the desired output values.
-  @param[in]  LearningRate  A double representing the learning rate for weight updates.
-
-  @return A double representing the loss value after training with this data sample.
-
-**/
-double
-BackPropagator::TrainOneData (
-  const matrix  &InputData,
-  const matrix  &DesiredOutput,
-  const double  LearningRate
-  )
-{
-  double  Loss;
-
-  Network.Forward (InputData);
-
-  Loss = LossMeanSquareError (DesiredOutput);
-
-  BackwardPass (DesiredOutput, LearningRate);
-
-  return Loss;
-}
-
-/**
-  Train the network for one epoch over the entire dataset.
-
-  @param[in]  InputDataSet     A vector of matrices representing the input data samples.
-  @param[in]  DesiredOutputSet A vector of matrices representing the desired output values for each sample.
-  @param[in]  LearningRate     A double representing the learning rate for weight updates.
-
-  @return A double representing the average loss over the epoch.
-
-**/
-double
-BackPropagator::TrainOneEpoch (
-  const vector<matrix> &InputDataSet,
-  const vector<matrix> &DesiredOutputSet,
-  const double         LearningRate
-  )
-{
-  double             EpochLoss = 0.0;
-  set<unsigned int>  TrainedDataIndex;
-  unsigned int       RandIndex;
-
-  while (TrainedDataIndex.size() < InputDataSet.size()) {
-    RandIndex = rand() % InputDataSet.size();
-    if (TrainedDataIndex.count (RandIndex) != 0) {
-      continue;
+  catch (const std::exception &Exception) {
+    // Fall back to deterministic generator if random_device fails
+    try {
+      std::mt19937 Generator((unsigned int)time(nullptr));
+      std::shuffle(Sequence.begin(), Sequence.end(), Generator);
     }
-
-    TrainedDataIndex.insert (RandIndex);
-
-    EpochLoss += TrainOneData (
-                   InputDataSet[RandIndex],
-                   DesiredOutputSet[RandIndex],
-                   LearningRate
-                   );
-
-    //
-    // Update weights in batch mode after processing a batch of data samples
-    // or after processing all data samples.
-    //
-    if (((TrainedDataIndex.size() % BatchSize) == 0) ||
-        (TrainedDataIndex.size() == InputDataSet.size())) {
-      AverageBatchDeltaWeights (BatchSize);
-      UpdateWeights (BatchDeltaWeights);
-
-      InitBatchDeltaWeights ();
+    catch (...) {
+      throw std::runtime_error("Failed to generate random sequence.");
     }
   }
 
-  return (double)(EpochLoss / InputDataSet.size());
+  return Sequence;
 }
 
-void
-BackPropagator::Train (
-  vector<matrix>  &InputDataSet,
-  vector<matrix>  &DesiredOutputSet
+/**
+  Extract a sub-vector of indices from TrainSequence based on 
+  a start and end index.
+
+  @param[in]  TrainSequence  A vector of unsigned int indices (training order).
+  @param[in]  StartIndex     The start position in TrainSequence (inclusive).
+  @param[in]  EndIndex       The end position in TrainSequence (exclusive).
+
+  @return A vector<unsigned int> containing the sub-sequence of indices.
+
+  @throws std::invalid_argument If indices are out of range or invalid.
+**/
+std::vector<unsigned int>
+ExtractSubVectorFromTrainSequence (
+  const std::vector<unsigned int> &TrainSequence,
+  unsigned int                     StartIndex,
+  unsigned int                     EndIndex
   )
 {
-  if (InputDataSet.size() != DesiredOutputSet.size()) {
-    DEBUG_LOG (__FUNCTION__ << ": InputData count = " << InputDataSet.size() << ", DesiredOutput count = " << DesiredOutputSet.size());
-    throw runtime_error ("Amount of InputData and DesiredOutput isn't match.");
+  // Input validation
+  if (StartIndex >= TrainSequence.size()) {
+    throw std::invalid_argument("StartIndex is out of range.");
   }
-  if (BatchSize > (unsigned int)InputDataSet.size()) {
-    DEBUG_LOG (__FUNCTION__ << ": Batch size = " << BatchSize << ", InputData count = " << InputDataSet.size());
-    throw runtime_error ("Batch size can't be larger than total training data set size.");
-  }
-
-  InitTrainingMode ();
-
-  ShowTrainingParams ();
-
-  double          EpochLoss;
-  clock_t         StartTime;
-  clock_t         EndTime;
-  vector<double>  Last10EpochsLoss;
-  double          StdDev = 0.0;
-
-  for (unsigned int Epoch = 1; Epoch <= Epochs; Epoch++) {
-    StartTime = clock ();
   
-    cout << "Training Epoch #" << Epoch << endl;
-
-    EpochLoss = TrainOneEpoch (
-                  InputDataSet,
-                  DesiredOutputSet,
-                  LearningRate
-                  );
-
-    EndTime = clock ();
-
-    if (EpochLoss < TargetLoss) {
-      DEBUG_LOG ("Loss of this epoch is lower than target loss(" << TargetLoss << ")");
-      break;
-    }
-
-    //
-    // Calculate the standard deviation of the loss over the last 10 epochs.
-    //
-    Last10EpochsLoss.push_back (EpochLoss);
-
-    if (Last10EpochsLoss.size() > MAX_EPOCHS_TO_TRACK_LOSS) {
-      Last10EpochsLoss.erase(Last10EpochsLoss.begin());
-    }
-
-    //
-    // Calculate standard deviation when you have at least 2 values
-    //
-    if (Last10EpochsLoss.size () >= 2) {
-      try {
-        StdDev = CalculateStandardDeviation (Last10EpochsLoss);
-      }
-      catch (const std::exception& Exception) {
-        cerr << "Error calculating standard deviation: " << Exception.what() << endl;
-      }
-    }
-
-    cout << "Epoch #" << Epoch << ": " << endl;
-    cout << "  Loss = " << EpochLoss << endl;
-    cout << "  Consume time = " << (double)(EndTime - StartTime) / CLOCKS_PER_SEC << " seconds" << endl;
-    if (Last10EpochsLoss.size () >= 2) {
-      cout << "  StdDev of last " << Last10EpochsLoss.size() << " epochs loss = " << StdDev << endl;
-    }
-
-    //
-    // If standard deviation is smaller than threshold, means loss hasn't
-    // change much in last 10 epochs, shake weights.
-    //
-    if ((StdDev < SHAKE_WEIGHT_THRESHOLD) &&
-        (StdDev != 0.0)) {
-      Network.PerturbWeight();
-    }
+  if (EndIndex > TrainSequence.size()) {
+    throw std::invalid_argument("EndIndex is out of range.");
   }
+  
+  if (StartIndex >= EndIndex) {
+    throw std::invalid_argument("StartIndex must be less than EndIndex.");
+  }
+  
+  // Extract sub-vector
+  std::vector<unsigned int> SubVector;
+  SubVector.reserve(EndIndex - StartIndex);
+  
+  for (unsigned int Index = StartIndex; Index < EndIndex; ++Index) {
+    SubVector.push_back(TrainSequence[Index]);
+  }
+  
+  return SubVector;
 }

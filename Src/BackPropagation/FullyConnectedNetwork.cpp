@@ -24,9 +24,10 @@ FullyConnectedNetwork::FullyConnectedNetwork (
   )
 {
   Layout = NetworkFrame;
+  ActivationType = SIGMOLD;
 
   WeightsMatrixInit(true);
-  InitNodeActivation ();
+
   ShowInfo (false);
 }
 
@@ -40,8 +41,7 @@ FullyConnectedNetwork::FullyConnectedNetwork (
 FullyConnectedNetwork::FullyConnectedNetwork(string filename)
 {
   ImportFromFile (filename);
-
-  InitNodeActivation ();
+  ActivationType = SIGMOLD;
 
   ShowInfo (false);
 }
@@ -164,100 +164,6 @@ double FullyConnectedNetwork::RandValue()
 }
 
 /**
-  Initialize node values of each layer to zero.
-
-**/
-void
-FullyConnectedNetwork::InitNodeActivation ()
-{
-  for(int Index = 0; Index < (int)Layout.size(); Index++) {
-    matrix LayerNodes(Layout[Index],1);
-    NodeActivation.push_back(LayerNodes);
-  }
-
-  ActivationType = SIGMOLD;
-}
-
-/**
-  Set the value of a specific node in a specific layer.
-
-  @param  Layer   An unsigned integer representing the layer index.
-  @param  Number  An unsigned integer representing the node index within the layer.
-  @param  Value   A double representing the value to be set for the specified node.
-
-  @throw std::runtime_error if the Layer or Number index is out of range.
-
-**/
-void
-FullyConnectedNetwork::SetNodeActivation (
-  unsigned int  Layer,
-  unsigned int  Number,
-  double        Value
-  )
-{
-  if (Layer >= (unsigned int)Layout.size()) {
-    DEBUG_LOG ("Layer: " << Layer << ", Layout size: " << Layout.size());
-    throw std::runtime_error("Error: Layer index out of range in SetNodeValue().");
-  }
-  if (Number >= (unsigned int)Layout[Layer]) {
-    DEBUG_LOG ("Number: " << Number << ", Nodes in layer: " << Layout[Layer]);
-    throw std::runtime_error("Error: Node number index out of range in SetNodeValue().");
-  }
-
-  NodeActivation[Layer].SetValue (Number, 0, Value);
-}
-
-/**
-  Get the activation matrix of a specific layer.
-
-  @param  Layer  An unsigned integer representing the layer index.
-
-  @return A matrix representing the activation values of the specified layer.
-
-  @throw std::runtime_error if the Layer index is out of range.
-
-**/
-matrix
-FullyConnectedNetwork::GetActivationByLayer (
-  unsigned int  Layer
-  ) const
-{
-  if (Layer >= (unsigned int)Layout.size()) {
-    DEBUG_LOG ("Layer: " << Layer << ", Layout size: " << Layout.size());
-    throw std::runtime_error("Error: Layer index out of range in GetNodeActivation().");
-  }
-
-  return NodeActivation[Layer];
-}
-
-/**
-  Get the deriative activation matrix of a specific layer.
-
-  @param  Layer  An unsigned integer representing the layer index.
-
-  @return A matrix which applied deriative activation to activation values of the specified layer.
-
-  @throw std::runtime_error if the Layer index is out of range.
-
-**/
-matrix
-FullyConnectedNetwork::GetDerivativeActivationByLayer (
-  unsigned int  Layer
-  )
-{
-  ACTIVATION_FUNC  DeriativeFunction;
-
-  if (Layer >= (unsigned int)Layout.size()) {
-    DEBUG_LOG ("Layer: " << Layer << ", Layout size: " << Layout.size());
-    throw std::runtime_error("Error: Layer index out of range in GetNodeActivation().");
-  }
-
-  DeriativeFunction = GetDeriativeActivationFunction (ActivationType);
-
-  return NodeActivation[Layer].ApplyElementWise (DeriativeFunction);
-}
-
-/**
   Perturb weights of the network by adding 0.2 to each weight.
 
 **/
@@ -274,19 +180,6 @@ void FullyConnectedNetwork::PerturbWeight()
     matrix AddIn (Row, Column, 0.2);
     Weights[Index] = add (Weights[Index], AddIn);
   }
-}
-
-void FullyConnectedNetwork::PrintActivationInLayer (
-  unsigned int  Layer
-  )
-{
-  if (Layer >= (unsigned int)Layout.size()) {
-    DEBUG_LOG ("Layer: " << Layer << ", Layout size: " << Layout.size());
-    throw std::runtime_error("Error: Layer index out of range in PrintNodesInLayer().");
-  }
-
-  cout << "Nodes in layer" << Layer << ":" << endl;
-  NodeActivation[Layer].show();
 }
 
 /**
@@ -373,14 +266,30 @@ FullyConnectedNetwork::GetLayout () const
 }
 
 /**
+  Get the activation type of the fully connected network.
+
+  @return An ACTIVATION_TYPE enum representing the activation function type used in the network.
+
+**/
+ACTIVATION_TYPE
+FullyConnectedNetwork::GetActivationType (
+  void
+  ) const
+{
+  return ActivationType;
+}
+
+/**
   Perform the forward pass of the fully connected network.
 
   @param  InputData  A matrix representing the input data to the network.
+  @param  Context    A ComputationContext object to store the activations during the forward pass.
 
 **/
 void
 FullyConnectedNetwork::Forward (
-  const matrix &InputData
+  const  matrix              &InputData,
+         ComputationContext  &Context
   )
 {
   if (InputData.getrow() != Layout[0] || InputData.getcolumn() != 1) {
@@ -394,20 +303,23 @@ FullyConnectedNetwork::Forward (
   //
   // Set input layer activation
   //
-  NodeActivation[0] = InputData;
+  Context.SetActivationByLayer (0, InputData);
 
   //
   // Forward pass through each layer
   //
   for (unsigned int LayerIdx = 0; LayerIdx < LayerCount - 1; LayerIdx++) {
-    matrix  CurrentLayerActivation = GetActivationByLayer (LayerIdx);
+    matrix  CurrentLayerActivation = Context.GetActivationByLayer (LayerIdx);
     matrix  CurrentWeights         = GetWeightByLayer (LayerIdx);
 
     matrix  Z = multiply (CurrentWeights, CurrentLayerActivation);
 
     ACTIVATION_FUNC  ActivationFunction = GetActivationFunction (ActivationType);
 
-    NodeActivation[LayerIdx + 1] = Z.ApplyElementWise (ActivationFunction);
+    Context.SetActivationByLayer (
+              LayerIdx + 1,
+              Z.ApplyElementWise (ActivationFunction)
+              );
   }
 }
 
@@ -416,6 +328,7 @@ FullyConnectedNetwork::Predict (
   const matrix &InputData
   )
 {
+/*
   Forward (InputData);
 
   matrix  OutputActivation = GetActivationByLayer (Layout.size() - 1);
@@ -432,4 +345,7 @@ FullyConnectedNetwork::Predict (
   }
 
   return MaxIndex;
+*/
+
+  throw runtime_error ("Not Supported.");
 }
