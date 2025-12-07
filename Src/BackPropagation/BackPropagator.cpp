@@ -224,16 +224,20 @@ BackPropagator::TrainOneEpoch (
     // Step 4:
     //   Wait until training of all sub-batch is complete.
     //
-    DEBUG_LOG ("Waiting for all sub-batch tasks to complete...");
     TrainingThreads.WaitForAllTasksDone ();
 
     //
     // Step 5:
     //   Average the batch delta weights and update the network weights.
+    //   Re-initialize the batch delta weights after updating.
     //
-    DEBUG_LOG ("Averaging batch delta weights and updating network weights...");
+    unique_lock<mutex> lock (DeltaWeightsMutex);
     AverageBatchDeltaWeights (BatchSize);
     UpdateWeights (BatchDeltaWeights);
+
+    InitBatchDeltaWeights ();
+
+    lock.unlock();
 
     //
     // Step 6:

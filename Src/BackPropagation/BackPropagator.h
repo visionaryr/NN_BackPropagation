@@ -73,7 +73,7 @@ class BackPropagator
 
     void
     DeltaWeightsCalculation (
-      vector<matrix>      DeltaWeights,
+      vector<matrix>      &DeltaWeights,
       ComputationContext  &Context
       );
 
@@ -85,7 +85,7 @@ class BackPropagator
       );
 
     void  UpdateWeights (
-      std::vector<matrix>  DeltaWeights
+      std::vector<matrix>  &DeltaWeights
       );
 
     void

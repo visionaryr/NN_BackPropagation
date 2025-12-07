@@ -325,13 +325,14 @@ FullyConnectedNetwork::Forward (
 
 unsigned int
 FullyConnectedNetwork::Predict (
-  const matrix &InputData
+  const matrix        &InputData,
+  ComputationContext  &Context
   )
 {
-/*
-  Forward (InputData);
 
-  matrix  OutputActivation = GetActivationByLayer (Layout.size() - 1);
+  Forward (InputData, Context);
+
+  matrix  OutputActivation = Context.GetActivationByLayer (Layout.size() - 1);
 
   unsigned int  MaxIndex = 0;
   double        MaxValue = OutputActivation.GetValue (0, 0);
@@ -345,7 +346,4 @@ FullyConnectedNetwork::Predict (
   }
 
   return MaxIndex;
-*/
-
-  throw runtime_error ("Not Supported.");
 }

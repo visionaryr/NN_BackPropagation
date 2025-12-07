@@ -110,7 +110,7 @@ BackPropagator::NodeDeltaCalculation (
   unsigned int  LastLayerIndex = (unsigned int)(Network.GetLayout().size() - 1);
 
   NodeDeltaOfLayer = CalculateLastLayerDelta (DesiredOutput, Context);
-  Context.SetActivationByLayer (LastLayerIndex, NodeDeltaOfLayer);
+  Context.SetNodeDeltaByLayer (LastLayerIndex, NodeDeltaOfLayer);
 
   //
   // Calculate delta for all nodes in all layer except last layer.
@@ -134,7 +134,7 @@ BackPropagator::NodeDeltaCalculation (
 **/
 void
 BackPropagator::DeltaWeightsCalculation (
-  vector<matrix>      DeltaWeights,
+  vector<matrix>      &DeltaWeights,
   ComputationContext  &Context
   )
 {
@@ -158,7 +158,7 @@ BackPropagator::DeltaWeightsCalculation (
 **/
 void
 BackPropagator::UpdateWeights (
-  vector<matrix>  DeltaWeights
+  vector<matrix>  &DeltaWeights
   )
 {
   if (DeltaWeights.empty () ||

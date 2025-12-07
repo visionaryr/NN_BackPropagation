@@ -31,7 +31,7 @@ int mTrainingCategories[] = {
 };
 
 int mNetworkLayout[] = {
-  784, 196, 75, 3
+  784, 15, 3
 };
 
 vector<matrix>
@@ -114,9 +114,9 @@ main (
   BackPropagator  TrainingAlgoBp (FCN);
 
   TrainingAlgoBp.SetLearningRate (0.1);
-  TrainingAlgoBp.SetEpochs (30);
+  TrainingAlgoBp.SetEpochs (10);
   TrainingAlgoBp.SetTargetLoss (0.05);
-  TrainingAlgoBp.SetTrainingMode (BATCH_MODE, 800);
+  TrainingAlgoBp.SetTrainingMode (BATCH_MODE, 300);
 
   TrainingAlgoBp.Train (
     DataInputs,      // Input data
@@ -129,9 +129,11 @@ main (
   ReadMNIST_and_label (TEST_DATA, DataSet, LabelSet, TrainingCategories);
   DataInputs     = ConvertDataToNetworkInput (DataSet);
 
-  unsigned int  Score = 0;
+  unsigned int        Score = 0;
+  ComputationContext  Context (Layout);
+
   for (unsigned int Index = 0; Index < DataInputs.size(); Index++) {
-    unsigned int  PredictedLabel = FCN.Predict (DataInputs[Index]);
+    unsigned int  PredictedLabel = FCN.Predict (DataInputs[Index], Context);
 
     Score += (TrainingCategories[PredictedLabel] == LabelSet[Index]) ? 1 : 0;
 

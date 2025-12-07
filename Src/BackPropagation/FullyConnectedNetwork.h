@@ -31,7 +31,12 @@ class FullyConnectedNetwork
     void PerturbWeight ();
 
     void Forward (const matrix &, ComputationContext &);
-    unsigned int Predict (const matrix &);
+
+    unsigned int
+    Predict (
+      const matrix        &InputData,
+      ComputationContext  &Context
+      );
 
   private:
     void WeightsRandomize();
