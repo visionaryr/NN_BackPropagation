@@ -1,4 +1,5 @@
 #include "ThreadPool.h"
+#include "DebugLib.h"
 
 ThreadPool::ThreadPool (
   size_t  NumOfThreads
@@ -17,30 +18,38 @@ ThreadPool::ThreadPool (
         // here is to unlock the queue before
         // executing the task so that other
         // threads can perform enqueue tasks
+        {
+          // Locking the queue so that data
+          // can be shared safely
+          unique_lock<mutex> lock(QueueMutex);
 
-        // Locking the queue so that data
-        // can be shared safely
-        unique_lock<mutex> lock(QueueMutex);
+          // Waiting until there is a task to
+          // execute or the pool is stopped
+          QueueStateCV.wait(lock, [this] {
+            return (!Tasks.empty() || Stop);
+          });
 
-        // Waiting until there is a task to
-        // execute or the pool is stopped
-        QueueStateCV.wait(lock, [this] {
-          return (!Tasks.empty() || Stop);
-        });
+          // exit the thread in case the pool
+          // is stopped and there are no tasks
+          if (Stop && Tasks.empty()) {
+            return;
+          }
 
-        // exit the thread in case the pool
-        // is stopped and there are no tasks
-        if (Stop && Tasks.empty()) {
-          return;
+          // Get the next task from the queue
+          task = move(Tasks.front());
+          Tasks.pop();
         }
 
-        // Get the next task from the queue
-        task = move(Tasks.front());
-        Tasks.pop();
-
-        lock.unlock();
-
         task();
+
+        {
+          // Notify potentially waiting threads
+          // that a task has been completed
+          unique_lock<mutex> lock(QueueMutex);
+          if (Tasks.empty()) {
+            AllTasksDoneCV.notify_all();
+          }
+        }
       }
     });
   }

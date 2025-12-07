@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <random>
 #include <cmath>
+#include <chrono>
 
 using namespace std;
 
@@ -124,8 +125,6 @@ BackPropagator::TrainOneSubBatch (
   unique_lock<mutex> lock (DeltaWeightsMutex);
   UpdateBatchDeltaWeights (DeltaWeights);
   EpochLoss += TotalLoss;
-
-  DEBUG_LOG ("Sub-batch trained with " << IndexToTrain.size() << " samples, Sub-batch loss = " << TotalLoss);
 }
 
 /**
@@ -146,12 +145,12 @@ BackPropagator::TrainOneEpoch (
 {
   vector<unsigned int>  TrainSequence;
   unsigned int          NumOfThreads;
+  unsigned int          BatchStartIndex;
+  unsigned int          BatchEndIndex;
 
   EpochLoss = 0.0;
 
   NumOfThreads = TrainingThreads.GetNumOfThreads ();
-
-  DEBUG_LOG ("Number of threads for training: " << NumOfThreads);
 
   //
   // Step 1:
@@ -159,44 +158,45 @@ BackPropagator::TrainOneEpoch (
   //   This is to make sure training between each epoch is running in different sequence.
   //
   TrainSequence = GenerateUniqueRandomSequence (InputDataSet.size());
-  DEBUG_LOG ("Training sequence size = " << TrainSequence.size());
 
-  for (unsigned int BatchStartIndex = 0; BatchStartIndex < TrainSequence.size(); BatchStartIndex += BatchSize) {
+  BatchStartIndex = 0;
+  BatchEndIndex   = min (BatchSize, (unsigned int)TrainSequence.size());
+  while (BatchStartIndex < TrainSequence.size()) {
     //
     // Step 2:
     //   Divide one batch into multiple sub-batches for multi-threading training.
     //
-    
-    // Ensure last partial batch doesn't pass the end
-    unsigned int BatchEndIndex = std::min(BatchStartIndex + BatchSize, (unsigned int)TrainSequence.size());
     unsigned int BatchLen = BatchEndIndex - BatchStartIndex; // actual number of elements in this batch
 
-    DEBUG_LOG ("Processing batch from index " << BatchStartIndex << " to " << BatchEndIndex - 1 << " , length = " << BatchLen); 
     if (BatchLen == 0) {
       break; // nothing to do
     }
 
     // Distribute BatchLen across threads as evenly as possible
     unsigned int BaseSubBatchSize = BatchLen / NumOfThreads;
-    unsigned int Extra = BatchLen % NumOfThreads; // first 'Extra' threads get +1
+    unsigned int Extra            = BatchLen % NumOfThreads;
 
     for (unsigned int ThreadId = 0; ThreadId < NumOfThreads; ++ThreadId) {
-      // compute start offset in the batch for this thread
-      unsigned int OffsetBefore = ThreadId * BaseSubBatchSize + std::min(ThreadId, Extra);
-      unsigned int SubStartIndex = BatchStartIndex + OffsetBefore;
+      //
+      // Compute start offset in the batch for this thread
+      //
+      unsigned int SubStartIndex = BatchStartIndex + ThreadId * BaseSubBatchSize;;
 
-      // compute how many elements this thread should process
-      unsigned int ThisSubBatchSize = BaseSubBatchSize + (ThreadId < Extra ? 1u : 0u);
+      //
+      // Compute how many elements this thread should process
+      // Add all extra to the last thread
+      //
+      unsigned int ThisSubBatchSize = BaseSubBatchSize + ((ThreadId == NumOfThreads - 1) ? Extra : 0u);
 
-      // compute end index (exclusive) and clamp to BatchEndIndex to be safe
+      //
+      // Compute end index (exclusive) and clamp to BatchEndIndex to be safe
+      //
       unsigned int SubEndIndex = std::min(SubStartIndex + ThisSubBatchSize, BatchEndIndex);
 
       // If no work for this thread, continue
       if (SubStartIndex >= SubEndIndex) {
         continue;
       }
-
-      DEBUG_LOG ("  Thread #" << ThreadId << ": processing sub-batch from index " << SubStartIndex << " to " << SubEndIndex - 1);
 
       vector<unsigned int>  IndexToTrain;
 
@@ -210,16 +210,14 @@ BackPropagator::TrainOneEpoch (
       // Step 3:
       //   Enqueue training of each sub-batch task into the task queue of ThreadPool.
       //
-      auto task = [this, InputDataSet, DesiredOutputSet, IndexToTrain]() mutable {
+      auto task = [this, &InputDataSet, &DesiredOutputSet, IndexToTrain]() mutable {
         // When this lambda is called, it executes the worker function
         // using the values it captured.
         this->TrainOneSubBatch(InputDataSet, DesiredOutputSet, IndexToTrain);
       };
 
       // The lambda captures (copies) sub_X and sub_Y, making them part of the task object.
-      DEBUG_LOG ("Enqueuing sub-batch task...");
       TrainingThreads.Enqueue(task);
-      DEBUG_LOG ("Sub-batch task enqueued.");
     }
 
     //
@@ -234,8 +232,15 @@ BackPropagator::TrainOneEpoch (
     //   Average the batch delta weights and update the network weights.
     //
     DEBUG_LOG ("Averaging batch delta weights and updating network weights...");
-    AverageBatchDeltaWeights (BatchLen);
+    AverageBatchDeltaWeights (BatchSize);
     UpdateWeights (BatchDeltaWeights);
+
+    //
+    // Step 6:
+    //   Move to next batch.
+    //
+    BatchStartIndex = BatchEndIndex;
+    BatchEndIndex   = min (BatchStartIndex + BatchSize, (unsigned int)TrainSequence.size());
   }
 
   return (double)(EpochLoss / InputDataSet.size());
@@ -261,13 +266,11 @@ BackPropagator::Train (
   ShowTrainingParams ();
 
   double          EpochLoss;
-  clock_t         StartTime;
-  clock_t         EndTime;
   vector<double>  Last10EpochsLoss;
   double          StdDev = 0.0;
 
   for (unsigned int Epoch = 1; Epoch <= Epochs; Epoch++) {
-    StartTime = clock ();
+    auto StartTime = chrono::high_resolution_clock::now();
   
     cout << "Training Epoch #" << Epoch << endl;
 
@@ -276,7 +279,13 @@ BackPropagator::Train (
                   DesiredOutputSet
                   );
 
-    EndTime = clock ();
+    auto EndTime = chrono::high_resolution_clock::now();
+
+    //
+    // Calculate time taken for this epoch.
+    //
+    auto   DurationInMs = chrono::duration_cast<std::chrono::milliseconds>(EndTime - StartTime);
+    double Duration = DurationInMs.count() / 1000.0; // in seconds
 
     if (EpochLoss < TargetLoss) {
       DEBUG_LOG ("Loss of this epoch is lower than target loss(" << TargetLoss << ")");
@@ -306,7 +315,7 @@ BackPropagator::Train (
 
     cout << "Epoch #" << Epoch << ": " << endl;
     cout << "  Loss = " << EpochLoss << endl;
-    cout << "  Consume time = " << (double)(EndTime - StartTime) / CLOCKS_PER_SEC << " seconds" << endl;
+    cout << "  Consume time = " << Duration << " seconds" << endl;
     if (Last10EpochsLoss.size () >= 2) {
       cout << "  StdDev of last " << Last10EpochsLoss.size() << " epochs loss = " << StdDev << endl;
     }

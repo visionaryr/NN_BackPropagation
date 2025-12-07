@@ -6,7 +6,6 @@
 #include "MnistDataSet.h"
 
 #include <iostream>
-#include <ctime>
 #include <cstdlib>
 #include <stdio.h>
 #include <queue>
@@ -32,7 +31,7 @@ int mTrainingCategories[] = {
 };
 
 int mNetworkLayout[] = {
-  784, 392, 196, 75, 3
+  784, 196, 75, 3
 };
 
 vector<matrix>
