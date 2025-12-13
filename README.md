@@ -44,15 +44,15 @@ Download link: https://www.kaggle.com/datasets/hojjatk/mnist-dataset
 
 | Branch Name | Implementation | Description |
 | ----------- | -------------- | ----------- |
-|main (or single-thread training) | Single-threaded | The sequential training. |
-| MultiThread-Training | Multi-threaded | High-performance version using the Thread Pool.|
+| main | Single-threaded | The sequential training. |
+| MultiThread-Training | Multi-threaded | High-performance version using the Thread Pool. |
 
 ## Instructions
 
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/[YourUsername]/NN_BackPropagation.git
+git clone https://github.com/visionaryr/NN_BackPropagation.git
 cd RepoName
 ```
 
@@ -111,7 +111,7 @@ int mTrainingCategories[] = {
 };
 ```
 
-### Root Path
+### Data Path
 This project requires a data path to be defined at compile time. The path is where the training and testing dataset is placed. By default, it is configured to use the current working directory where the program is running.
 
 If you need to define an absolute or custom local path for testing or development, you must create a local configuration file `LocalConfig.mk` that Git is instructed to ignore. The sample file is as below,
