@@ -26,14 +26,13 @@
 using namespace std;
 
 int mTrainingCategories[] = {
-  //0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-  1, 2, 3
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 };
 
 int mNetworkLayout[] = {
   784,  // Input layer
-  15,   // Hidden layer
-  3     // Output layer
+  30,   // Hidden layer
+  10    // Output layer
 };
 
 vector<matrix>
@@ -90,6 +89,14 @@ main (
   // Initialize random generator.
   //
   srand (time (NULL));
+
+  //
+  // Check if train categories match network output layer size.
+  //
+  if (ARRAY_SIZE (mTrainingCategories) != mNetworkLayout[ARRAY_SIZE (mNetworkLayout) - 1]) {
+    cout << "Error: Training categories size does not match network output layer size!" << endl;
+    return -1;
+  }
 
   //
   // Init categories to be trained.
