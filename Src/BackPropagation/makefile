@@ -40,6 +40,17 @@ OBJS = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 # Full path to the final executable
 EXEC = $(BIN_DIR)/$(TARGET)
 
+# --- START OF LOCAL CONFIGURATION LOADING ---
+# Attempt to include the local, private configuration file.
+-include LocalConfig.mk
+
+# Check if the LOCAL_PATH_FILE macro was defined by local_config.mk
+ifdef LOCAL_PATH_FILE
+    CXXFLAGS += -DROOT_PATH=$(LOCAL_PATH_FILE)
+endif
+
+# --- END OF LOCAL CONFIGURATION LOADING ---
+
 # ==============================================================================
 # 3. Core Build Targets
 # ==============================================================================
