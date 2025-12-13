@@ -1,3 +1,11 @@
+#
+#  Makefile for building the project.
+#
+#  Copyright (c) 2025, visionaryr
+#  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+#
+
+
 # ==============================================================================
 # 1. Configuration Variables
 # ==============================================================================

@@ -1,3 +1,10 @@
+/**
+  FullyConnectedNetwork class definition.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #ifndef _FULLY_CONNECTED_NETWORK_H
 #define _FULLY_CONNECTED_NETWORK_H
 

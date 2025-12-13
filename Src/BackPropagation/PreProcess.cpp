@@ -1,3 +1,10 @@
+/**
+  Data preprocessing functions implementation.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #include "BpMisc.h"
 
 #include <vector>

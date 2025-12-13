@@ -1,3 +1,10 @@
+/**
+  PNG file I/O definitions.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #ifndef _PNG_IO_H_
 #define _PNG_IO_H_
 

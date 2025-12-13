@@ -1,3 +1,10 @@
+/**
+  Data preprocessing functions definition.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #ifndef _PRE_PROCESS_H_
 #define _PRE_PROCESS_H_
 

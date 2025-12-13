@@ -1,3 +1,10 @@
+/**
+  Debugging utilities.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #ifndef _DEBUG_LIB_H_
 #define _DEBUG_LIB_H_
 
