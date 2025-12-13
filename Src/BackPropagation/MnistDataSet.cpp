@@ -10,15 +10,39 @@
 
 #include <iostream>
 #include <cstring>
+#include <filesystem>
 
 using namespace std;
-
-#define  ROOT_PATH "/home/rexchen/Desktop/1092_NN/Back_Propagation/"
 
 #define  TRAIN_IMAGES_IDX_FILE  (string)"train-images.idx3-ubyte"
 #define  TRAIN_LABELS_IDX_FILE  (string)"train-labels.idx1-ubyte"
 #define  TEST_IMAGES_IDX_FILE   (string)"t10k-images.idx3-ubyte"
 #define  TEST_LABELS_IDX_FILE   (string)"t10k-labels.idx1-ubyte"
+
+/**
+  Get the root path for MNIST dataset files.
+
+  This function returns the root path where the MNIST dataset files are located.
+  If ROOT_PATH is defined during compilation, it returns that path.
+  Otherwise, it returns the current working directory.
+
+  @return  The root path as a string.
+
+**/
+static
+string
+GetRootPath (
+  void
+  )
+{
+#ifdef ROOT_PATH
+  string  RootPath(ROOT_PATH);
+
+  return RootPath;
+#else
+  return filesystem::current_path().string() + "/";
+#endif
+}
 
 /**
   Convert a 32-bit unsigned integer from big-endian to little-endian format.
@@ -171,6 +195,7 @@ ReadMNIST_and_label (
   unsigned int  NumberOfLabels = 0;
   string        DataSetIdxFile;
   string        LabelSetIdxFile;
+  string        RootPath = GetRootPath();
 
   if (LabelsToRead.size() == 0) {
     throw runtime_error ("Error: No labels to read");
@@ -190,7 +215,7 @@ ReadMNIST_and_label (
   //
   DataSetIdxFile = (DataType == TRAINING_DATA) ? TRAIN_IMAGES_IDX_FILE : TEST_IMAGES_IDX_FILE;
   ImagesFile = OpenIdxFile (
-                 ROOT_PATH + DataSetIdxFile,
+                 RootPath + DataSetIdxFile,
                  0x00000803,
                  ImagesFileHeader
                  );
@@ -207,7 +232,7 @@ ReadMNIST_and_label (
   //
   LabelSetIdxFile = (DataType == TRAINING_DATA) ? TRAIN_LABELS_IDX_FILE : TEST_LABELS_IDX_FILE;
   LabelsFile = OpenIdxFile (
-                 ROOT_PATH + LabelSetIdxFile,
+                 RootPath + LabelSetIdxFile,
                  0x00000801,
                  LabelsFileHeader
                  );
