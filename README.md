@@ -44,15 +44,15 @@ Download link: https://www.kaggle.com/datasets/hojjatk/mnist-dataset
 
 | Branch Name | Implementation | Description |
 | ----------- | -------------- | ----------- |
-|main (or single-thread training) | Single-threaded | The sequential training. |
-| MultiThread-Training | Multi-threaded | High-performance version using the Thread Pool.|
+| main | Single-threaded | The sequential training. |
+| MultiThread-Training | Multi-threaded | High-performance version using the Thread Pool. |
 
 ## Instructions
 
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/[YourUsername]/NN_BackPropagation.git
+git clone https://github.com/visionaryr/NN_BackPropagation.git
 cd RepoName
 ```
 
