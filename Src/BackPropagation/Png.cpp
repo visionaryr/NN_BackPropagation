@@ -1,3 +1,10 @@
+/**
+  PNG file reading implementation.  
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <png.h>

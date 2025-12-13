@@ -1,3 +1,10 @@
+/**
+  Miscellaneous helper functions for BackPropagator.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #ifndef _BACK_PROPAGATION_MISC_H_
 #define _BACK_PROPAGATION_MISC_H_
 

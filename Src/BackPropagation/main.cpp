@@ -1,3 +1,10 @@
+/**
+  Main entry point for Back Propagation training on MNIST dataset.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #include "matrix.h"
 #include "BackPropagator.h"
 #include "FullyConnectedNetwork.h"

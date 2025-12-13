@@ -1,3 +1,10 @@
+/**
+  BackPropagator class definition.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #ifndef _BACK_PROPAGATOR_H_
 #define _BACK_PROPAGATOR_H_
 

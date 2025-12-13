@@ -1,3 +1,10 @@
+/**
+  MNIST data set reading definition.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #ifndef _MNIST_DATA_SET_H_
 #define _MNIST_DATA_SET_H_
 

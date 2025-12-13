@@ -1,4 +1,9 @@
-//matrix.h
+/**
+  Matrix class definition.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
 #ifndef MATRIX_H
 #define MATRIX_H
 
