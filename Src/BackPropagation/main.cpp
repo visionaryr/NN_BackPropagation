@@ -126,7 +126,8 @@ main (
   TrainingAlgoBp.SetLearningRate (0.1);
   TrainingAlgoBp.SetEpochs (30);
   TrainingAlgoBp.SetTargetLoss (0.05);
-  TrainingAlgoBp.SetTrainingMode (BATCH_MODE, 300);
+  TrainingAlgoBp.SetTrainingMode (BATCH_MODE);
+  TrainingAlgoBp.SetBatchSize (300);
 
   TrainingAlgoBp.Train (
     DataInputs,      // Input data
