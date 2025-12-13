@@ -1,3 +1,10 @@
+/**
+  ComputationContext class implementation.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #include "ComputationContext.h"
 #include "DebugLib.h"
 

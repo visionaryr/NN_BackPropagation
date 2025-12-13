@@ -1,3 +1,10 @@
+/**
+  ThreadPool class definition.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #ifndef _THREAD_POOL_H_
 #define _THREAD_POOL_H_
 

@@ -1,3 +1,10 @@
+/**
+  ComputationContext class definition.
+
+  Copyright (c) 2025, visionaryr
+  Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
+**/
+
 #ifndef _COMPUTATION_CONTEXT_H_
 #define _COMPUTATION_CONTEXT_H_
 
