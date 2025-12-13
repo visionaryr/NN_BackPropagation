@@ -96,5 +96,10 @@ BackPropagator::ShowTrainingParams (
     cout << "  Batch Size    : " << BatchSize << endl;
   }
 
-  cout << "======================================" << endl;
+  if (TrainingMode == PATTERN_MODE) {
+    cout << endl << "!!!WARNING:" << endl;
+    cout << "It's not recommended to use PATTERN_MODE with multi-thread training, as it may slow down the training process significantly." << endl;
+  }
+
+  cout << endl << "======================================" << endl;
 }
