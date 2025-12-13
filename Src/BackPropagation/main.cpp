@@ -31,7 +31,9 @@ int mTrainingCategories[] = {
 };
 
 int mNetworkLayout[] = {
-  784, 15, 3
+  784,  // Input layer
+  15,   // Hidden layer
+  3     // Output layer
 };
 
 vector<matrix>
