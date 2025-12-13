@@ -46,8 +46,7 @@ BackPropagator::SetTargetLoss (
 
 void
 BackPropagator::SetTrainingMode (
-  const TRAINING_MODE  TrainingMode,
-  const unsigned int   BatchSize
+  const TRAINING_MODE  TrainingMode
   )
 {
   if (TrainingMode >= TRAINING_MODE_MAX) {
@@ -61,11 +60,26 @@ BackPropagator::SetTrainingMode (
 
   this->TrainingMode = TrainingMode;
 
-  //
-  // Batch mode means to update weights after processing a batch of data samples.
-  // Pattern mode, means to update weights after processing each data sample.
-  //
-  this->BatchSize = (this->TrainingMode == PATTERN_MODE) ? 1 : BatchSize;
+  if (TrainingMode == PATTERN_MODE) {
+    this->BatchSize = 1;
+  }
+}
+
+void
+BackPropagator::SetBatchSize (
+  const unsigned int   BatchSize
+  )
+{
+  if (BatchSize == 0) {
+    DEBUG_LOG ("Size of a batch should at least be 1.");
+    throw invalid_argument ("BackPropagator::SetBatchSize (): Invalid batch size.");
+  }
+  if (this->TrainingMode != BATCH_MODE) {
+    DEBUG_LOG ("Cannot set batch size when training mode is not BATCH_MODE.");
+    throw invalid_argument ("BackPropagator::SetBatchSize (): Invalid operation in current training mode.");
+  }
+
+  this->BatchSize = BatchSize;
 }
 
 void
@@ -78,9 +92,9 @@ BackPropagator::ShowTrainingParams (
   cout << "  Epochs        : " << Epochs << endl;
   cout << "  Target Loss   : " << TargetLoss << endl;
   cout << "  Training Mode : " << ((TrainingMode == BATCH_MODE) ? "BATCH_MODE" : "PATTERN_MODE") << endl;
-  //if (TrainingMode == BATCH_MODE) {
+  if (TrainingMode == BATCH_MODE) {
     cout << "  Batch Size    : " << BatchSize << endl;
-  //}
+  }
 
   cout << "======================================" << endl;
 }

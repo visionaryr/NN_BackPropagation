@@ -36,7 +36,10 @@ class BackPropagator
       );
 
     void SetTrainingMode (
-      const TRAINING_MODE  TrainingMode,
+      const TRAINING_MODE  TrainingMode
+      );
+
+    void SetBatchSize (
       const unsigned int   BatchSize
       );
 
