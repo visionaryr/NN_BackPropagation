@@ -1,3 +1,4 @@
 .vscode/
 Models/
 Data/
+Src/BackPropagation/LocalConfig.mk
