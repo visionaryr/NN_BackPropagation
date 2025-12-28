@@ -156,8 +156,11 @@ main (
     cout << "Test Image " << Index << ": Predicted Label = " << TrainingCategories[PredictedLabel] << ", Actual Label = " << LabelSet[Index] << endl;
   }
 
-  cout << "Final Score: " << Score << " / " << DataInputs.size() << endl;
-  cout << "Accuracy: " << fixed << setprecision(2) << (double)Score / DataInputs.size() * 100 << " %" << endl;
-
+  // Use an ostringstream to format accuracy so we don't modify cout's global formatting state.
+  {
+    std::ostringstream oss;
+    oss << std::fixed << std::setprecision(2) << (double)Score / DataInputs.size() * 100;
+    cout << "Accuracy: " << oss.str() << " %" << endl;
+  }
   return 0;
 }

@@ -96,14 +96,20 @@ matrix::getcolumn(
 **/
 void matrix::show() const
 {
-  for(unsigned int RowIdx = 0; RowIdx < row; RowIdx++)
-  {
-    for(unsigned int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++)
-    {
-      cout<<setw(5)<<Matrix[RowIdx][ColumnIdx]<<' ';
+// Print with reasonable precision without changing global cout state.
+  std::ios::fmtflags oldFlags = cout.flags();
+  std::streamsize oldPrec = cout.precision();
+
+  for(unsigned int RowIdx = 0; RowIdx < row; RowIdx++) {
+    for(unsigned int ColumnIdx = 0; ColumnIdx < column; ColumnIdx++) {
+      cout << std::setprecision(6) << setw(10) << Matrix[RowIdx][ColumnIdx] << ' ';
     }
-    cout<<endl;
+    cout << endl;
   }
+
+  // Restore previous formatting flags
+  cout.flags(oldFlags);
+  cout.precision(oldPrec);
 }
 
 /**
