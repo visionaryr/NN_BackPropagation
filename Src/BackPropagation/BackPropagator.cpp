@@ -237,9 +237,14 @@ BackPropagator::TrainOneEpoch (
     // Step 5:
     //   Average the batch delta weights and update the network weights.
     //   Re-initialize the batch delta weights after updating.
-    //
+    // Note: use the actual number of samples in this batch when averaging.
+    unsigned int ActualBatchCount = BatchEndIndex - BatchStartIndex;
+    if (ActualBatchCount == 0) {
+      break; // nothing to do
+    }
+
     unique_lock<mutex> lock (DeltaWeightsMutex);
-    AverageBatchDeltaWeights (BatchSize);
+    AverageBatchDeltaWeights (ActualBatchCount);
     UpdateWeights (BatchDeltaWeights);
 
     InitBatchDeltaWeights ();

@@ -27,6 +27,7 @@ static
 double RowMultiplyColumn (const vector<double> &Row, const vector<double> &Column)
 {
   if (Row.size() != Column.size()) {
+    cout << Row.size() << ", " << Column.size() << endl;
     cout<<"RowMultiplyColumn: size of row and column do not match!"<<endl;
     exit(1);
   }

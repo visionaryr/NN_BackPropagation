@@ -89,8 +89,10 @@ main (
 {
   DATA_SET        DataSet;
   LABELS          LabelSet;
+  LABELS          TestLabelSet;
   vector<matrix>  DesiredOutputs;
   vector<matrix>  DataInputs;
+  vector<matrix>  TestDataInputs;
 
   //
   // Initialize random generator.
@@ -125,40 +127,49 @@ main (
   FullyConnectedNetwork  FCN (Layout);
 
   //
+  // Test the trained network
+  //
+  ReadMNIST_and_label (TEST_DATA, DataSet, TestLabelSet, TrainingCategories);
+  TestDataInputs = ConvertDataToNetworkInput (DataSet);
+
+  //
   // Initialize trainning algorithm and parameters, here we use Back Propagation.
   //
   BackPropagator  TrainingAlgoBp (FCN);
 
-  TrainingAlgoBp.SetLearningRate (0.1);
-  TrainingAlgoBp.SetEpochs (10);
-  TrainingAlgoBp.SetTargetLoss (0.05);
-  TrainingAlgoBp.SetTrainingMode (BATCH_MODE);
-  TrainingAlgoBp.SetBatchSize (300);
+  for (unsigned int Rounds = 0; Rounds < 5; Rounds++) {
+    TrainingAlgoBp.SetLearningRate (0.1);
+    TrainingAlgoBp.SetEpochs (2);
+    TrainingAlgoBp.SetTargetLoss (0.05);
+    TrainingAlgoBp.SetTrainingMode (BATCH_MODE);
+    TrainingAlgoBp.SetBatchSize (300);
 
-  TrainingAlgoBp.Train (
-    DataInputs,      // Input data
-    DesiredOutputs   // Desired Output
-    );
+    TrainingAlgoBp.Train (
+      DataInputs,      // Input data
+      DesiredOutputs   // Desired Output
+      );
 
-  //
-  // Test the trained network
-  //
-  ReadMNIST_and_label (TEST_DATA, DataSet, LabelSet, TrainingCategories);
-  DataInputs     = ConvertDataToNetworkInput (DataSet);
+    unsigned int        Score = 0;
+    ComputationContext  Context (Layout);
 
-  unsigned int        Score = 0;
-  ComputationContext  Context (Layout);
+    for (unsigned int Index = 0; Index < TestDataInputs.size(); Index++) {
+      unsigned int  PredictedLabel = FCN.Predict (TestDataInputs[Index], Context);
 
-  for (unsigned int Index = 0; Index < DataInputs.size(); Index++) {
-    unsigned int  PredictedLabel = FCN.Predict (DataInputs[Index], Context);
+      Score += (TrainingCategories[PredictedLabel] == TestLabelSet[Index]) ? 1 : 0;
 
-    Score += (TrainingCategories[PredictedLabel] == LabelSet[Index]) ? 1 : 0;
+      // cout << "Test Image " << Index << ": Predicted Label = " << TrainingCategories[PredictedLabel] << ", Actual Label = " << LabelSet[Index] << endl;
+    }
 
-    cout << "Test Image " << Index << ": Predicted Label = " << TrainingCategories[PredictedLabel] << ", Actual Label = " << LabelSet[Index] << endl;
+    cout << "==================== Training Round " << Rounds + 1 << " Score ====================" << endl;
+    cout << "Final Score: " << Score << " / " << TestDataInputs.size() << endl;
+
+    // Use an ostringstream to format accuracy so we don't modify cout's global formatting state.
+    {
+      std::ostringstream oss;
+      oss << std::fixed << std::setprecision(2) << (double)Score / TestDataInputs.size() * 100;
+      cout << "Accuracy: " << oss.str() << " %" << endl;
+    }
   }
-
-  cout << "Final Score: " << Score << " / " << DataInputs.size() << endl;
-  cout << "Accuracy: " << fixed << setprecision(2) << (double)Score / DataInputs.size() * 100 << " %" << endl;
 
   return 0;
 }
