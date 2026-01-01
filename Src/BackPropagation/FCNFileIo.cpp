@@ -1,7 +1,7 @@
 /**
   FullyConnectedNetwork file input/output implementation.
 
-  Copyright (c) 2025, visionaryr
+  Copyright (c) 2026, visionaryr
   Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
 **/
 
@@ -9,6 +9,7 @@
 #include "DebugLib.h"
 
 #include <iostream>
+#include <cstring>
 
 using namespace std;
 
@@ -67,6 +68,8 @@ FullyConnectedNetwork::ExportToFile (
   HdrSize = sizeof(NETWORK_FILE) + (Layout.size() - 1) * sizeof(u_int32_t); // -1 since Layout[1] already includes one unsigned int.
   FileHeader = (NETWORK_FILE *) new char[HdrSize];
 
+  memset(FileHeader, 0, HdrSize);
+
   FileHeader->Signature   = NETWORK_FILE_SIGNATURE;
   FileHeader->NumOfLayers = (unsigned int)Layout.size();
   FileHeader->HdrSize     = HdrSize;
@@ -77,7 +80,7 @@ FullyConnectedNetwork::ExportToFile (
   //
   // Write file header
   //
-  fs.write (reinterpret_cast<const char *>(&FileHeader), HdrSize);
+  fs.write (reinterpret_cast<const char *>(FileHeader), HdrSize);
   delete [] (char *)FileHeader;
 
   //
@@ -157,7 +160,7 @@ FullyConnectedNetwork::ImportFromFile (
   FileHeader = (NETWORK_FILE *) new char[HdrSize];
 
   fs.seekg (0, ios::beg);
-  fs.read (reinterpret_cast<char *>(&FileHeader), HdrSize);
+  fs.read (reinterpret_cast<char *>(FileHeader), HdrSize);
 
   if (!IsValidFileHeader (FileHeader)) {
     DEBUG_LOG ("Invalid network file header");

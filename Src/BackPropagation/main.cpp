@@ -1,7 +1,7 @@
 /**
   Main entry point for Back Propagation training on MNIST dataset.
 
-  Copyright (c) 2025, visionaryr
+  Copyright (c) 2026, visionaryr
   Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
 **/
 
@@ -20,6 +20,7 @@
 #include <iomanip>
 #include <set>
 #include <cstring>
+#include <filesystem>
 
 #define ARRAY_SIZE(Array) \
   (sizeof(Array) / sizeof(Array[0]))
@@ -41,6 +42,30 @@ int mNetworkLayout[] = {
   30,   // Hidden layer
   10    // Output layer
 };
+
+/**
+  Get the root path for MNIST dataset files.
+
+  This function returns the root path where the MNIST dataset files are located.
+  If ROOT_PATH is defined during compilation, it returns that path.
+  Otherwise, it returns the current working directory.
+
+  @return  The root path as a string.
+
+**/
+string
+GetRootPath (
+  void
+  )
+{
+#ifdef ROOT_PATH
+  string  RootPath(ROOT_PATH);
+
+  return RootPath;
+#else
+  return filesystem::current_path().string() + "/";
+#endif
+}
 
 vector<matrix>
 ConvertLabelsToNetworkOutput (
@@ -93,6 +118,7 @@ main (
   vector<matrix>  DesiredOutputs;
   vector<matrix>  DataInputs;
   vector<matrix>  TestDataInputs;
+  string          Filename;
 
   //
   // Initialize random generator.
@@ -169,6 +195,10 @@ main (
       oss << std::fixed << std::setprecision(2) << (double)Score / TestDataInputs.size() * 100;
       cout << "Accuracy: " << oss.str() << " %" << endl;
     }
+  
+    Filename = "Round_" + to_string (Rounds + 1) + ".dat";
+
+    FCN.ExportToFile (GetRootPath() + "Test", Filename);
   }
 
   return 0;

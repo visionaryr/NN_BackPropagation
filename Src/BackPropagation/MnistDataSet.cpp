@@ -1,7 +1,7 @@
 /**
   MNIST data set reading implementation.
 
-  Copyright (c) 2025, visionaryr
+  Copyright (c) 2026, visionaryr
   Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
 **/
 
@@ -10,7 +10,6 @@
 
 #include <iostream>
 #include <cstring>
-#include <filesystem>
 
 using namespace std;
 
@@ -29,20 +28,10 @@ using namespace std;
   @return  The root path as a string.
 
 **/
-static
 string
 GetRootPath (
   void
-  )
-{
-#ifdef ROOT_PATH
-  string  RootPath(ROOT_PATH);
-
-  return RootPath;
-#else
-  return filesystem::current_path().string() + "/";
-#endif
-}
+  );
 
 /**
   Convert a 32-bit unsigned integer from big-endian to little-endian format.
