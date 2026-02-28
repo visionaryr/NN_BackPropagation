@@ -1,7 +1,7 @@
 /**
   BackPropagator configuration functions implementation.
 
-  Copyright (c) 2025, visionaryr
+  Copyright (c) 2026, visionaryr
   Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
 **/
 
@@ -15,9 +15,12 @@ BackPropagator::InitTrainingParams (
   void
   )
 {
+  //
+  // Default parameters, can be overridden by config file or public setter functions.
+  //
   LearningRate = 0.1;
-  Epochs       = 10;
-  TargetLoss   = 0.5;
+  Epochs       = 3;
+  TargetLoss   = 0.05;
   TrainingMode = BATCH_MODE;
   BatchSize    = 200;
 }
@@ -87,6 +90,20 @@ BackPropagator::SetBatchSize (
   }
 
   this->BatchSize = BatchSize;
+}
+
+void
+BackPropagator::SetTrainingParameters (
+  const  TRAINING_CONFIG  &TrainingConfig
+  )
+{
+  SetLearningRate (TrainingConfig.LearningRate);
+  SetEpochs (TrainingConfig.Epochs);
+  SetTargetLoss (TrainingConfig.TargetLoss);
+  SetTrainingMode (TrainingConfig.TrainingMode);
+  if (TrainingMode == BATCH_MODE) {
+    SetBatchSize (TrainingConfig.BatchSize);
+  }
 }
 
 void

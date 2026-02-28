@@ -1,7 +1,7 @@
 /**
   BackPropagator class definition.
 
-  Copyright (c) 2025, visionaryr
+  Copyright (c) 2026, visionaryr
   Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
 **/
 
@@ -11,16 +11,11 @@
 #include "matrix.h"
 #include "FullyConnectedNetwork.h"
 #include "ThreadPool.h"
+#include "ConfigurationData.h"
 
 #include <vector>
 #include <functional>
 #include <mutex>
-
-typedef enum {
-  BATCH_MODE = 0,
-  PATTERN_MODE,
-  TRAINING_MODE_MAX
-} TRAINING_MODE;
 
 class BackPropagator
 {
@@ -49,7 +44,9 @@ class BackPropagator
     void SetBatchSize (
       const unsigned int   BatchSize
       );
-
+    void SetTrainingParameters (
+      const  TRAINING_CONFIG  &TrainingConfig
+      );
     void
     ShowTrainingParams (
       void

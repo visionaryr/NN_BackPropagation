@@ -1,7 +1,7 @@
 /**
   BackPropagator class base implementation.
 
-  Copyright (c) 2025, visionaryr
+  Copyright (c) 2026, visionaryr
   Licensed under the MIT License. See the accompanying 'LICENSE' file for details.
 **/
 
@@ -263,6 +263,18 @@ BackPropagator::TrainOneEpoch (
 }
 
 void
+PrintEpochStats (
+  unsigned int Epoch,
+  double Loss,
+  double Duration
+  )
+{
+  cout << "Epoch #" << Epoch << ": " << endl;
+  cout << "  Loss = " << Loss << endl;
+  cout << "  Consume time = " << Duration << " seconds" << endl;
+}
+
+void
 BackPropagator::Train (
   vector<matrix>  &InputDataSet,
   vector<matrix>  &DesiredOutputSet
@@ -303,7 +315,9 @@ BackPropagator::Train (
     auto   DurationInMs = chrono::duration_cast<std::chrono::milliseconds>(EndTime - StartTime);
     double Duration = DurationInMs.count() / 1000.0; // in seconds
 
-    if (EpochLoss < TargetLoss) {
+    PrintEpochStats (Epoch, EpochLoss, Duration);
+
+    if ((TargetLoss > 0.0) && (EpochLoss < TargetLoss)) {
       DEBUG_LOG ("Loss of this epoch is lower than target loss(" << TargetLoss << ")");
       break;
     }
@@ -327,13 +341,6 @@ BackPropagator::Train (
       catch (const std::exception& Exception) {
         cerr << "Error calculating standard deviation: " << Exception.what() << endl;
       }
-    }
-
-    cout << "Epoch #" << Epoch << ": " << endl;
-    cout << "  Loss = " << EpochLoss << endl;
-    cout << "  Consume time = " << Duration << " seconds" << endl;
-    if (Last10EpochsLoss.size () >= 2) {
-      cout << "  StdDev of last " << Last10EpochsLoss.size() << " epochs loss = " << StdDev << endl;
     }
 
     //

@@ -74,6 +74,18 @@ make all
 make run
 ```
 
+Or run directly with a configuration file(See [Configuration File](#configuration-file) for details):
+
+```bash
+./bin/BpProgram -f config.yaml
+```
+
+To run with default built-in settings (without a config file):
+
+```bash
+./bin/BpProgram
+```
+
 ### Build with Debug Mode
 
 ```bash
@@ -82,34 +94,58 @@ make debug
 
 ## Configuration and Customization
 
-The project allows users to quickly configure the neural network architecture and the specific subset of the dataset to be trained by modifying two static arrays located in the `main.cpp` file.
+### Configuration File
 
-### Network Layer Configuration
-This array defines the size (number of neurons) of each layer in the Fully Connected Network (FCN). The number of layers is determined by the size of this array.
+The project uses a YAML configuration file to specify network architecture, training parameters, and data settings. This allows users to easily experiment with different configurations without recompiling.
+
+To run the program with a configuration file, use the `-f` flag:
+
+```bash
+./BpProgram -f config.yaml
+```
+
+If no configuration file is specified, the program uses built-in hardcoded defaults.
+
+#### Configuration File Format
+
+The configuration file (`config.yaml`) has three main sections:
+
+**Network Architecture**
+
+Defines the layer sizes for the Fully Connected Network (FCN):
+
+```yaml
+Network:
+  Layout: [784, 30, 10]  # [input layer, hidden layer(s), output layer]
+```
 
 - The first element must match the input feature size (e.g., 784 for MNIST images).
-
 - The last element must match the number of output categories (e.g., 10 for MNIST digits).
+- You can have multiple hidden layers by adding more elements.
 
-```c
-int mNetworkLayout[] = {
-  784,  // Input layer
-  15,   // Hidden layer
-  10    // Output layer
-};
+**Training Parameters**
+
+Configures the backpropagation training algorithm:
+
+```yaml
+Training:
+  LearningRate: 0.001      # Learning rate (typically 0.001 - 0.1)
+  Epochs: 20               # Number of complete passes through the dataset
+  TargetLoss: 0.05         # Target loss threshold (training stops early if reached)
+  BatchSize: 300           # Number of samples per batch (BATCH_MODE)
+  TrainingMode: "BATCH_MODE"  # "BATCH_MODE" or "PATTERN_MODE"
 ```
 
-### Training Category Selection
-This array allows you to filter the MNIST dataset to include only specific digits for training and testing. This is useful for binary classification experiments or quick tests on a smaller data subset.
+**Data Configuration**
 
-- The values should correspond to the desired target categories (digits 0 through 9).
-- The size of this array automatically dictates the size of the output layer. If you set this array to a size $C$, then the Output Layer size in g_LayerConfiguration must be set to $C$.
+Specifies dataset and training categories:
 
-```c
-int mTrainingCategories[] = {
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9
-};
+```yaml
+Data:
+  TrainingCategories: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  # Digit classes to train on
 ```
+
+The `TrainingCategories` array determines which digits (0-9) to include in training. The size of this array must match the output layer size in the Network Layout.
 
 ### Data Path
 This project requires a data path to be defined at compile time. The path is where the training and testing dataset is placed. By default, it is configured to use the current working directory where the program is running.
@@ -120,8 +156,6 @@ If you need to define an absolute or custom local path for testing or developmen
 # Define the macro that points to your private header file
 LOCAL_PATH_FILE = \"your/data/path/\"
 ```
-
-
 
 ## License
 This project is licensed under the MIT License.
