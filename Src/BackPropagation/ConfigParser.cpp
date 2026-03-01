@@ -10,27 +10,9 @@
 
 #include <fstream>
 #include <sstream>
-#include <algorithm>
-#include <cctype>
-#include <iostream>
 #include <functional>
 
 using namespace std;
-
-typedef struct {
-  const string  SectionName;
-  const string  KeyName;
-} CONFIG_KEY;
-
-CONFIG_KEY  mConfigKeys[] = {
-  {SECTION_NAME_NETWORK,  KEY_NAME_LAYOUT},
-  {SECTION_NAME_TRAINING, KEY_NAME_LEARNING_RATE},
-  {SECTION_NAME_TRAINING, KEY_NAME_EPOCHS},
-  {SECTION_NAME_TRAINING, KEY_NAME_TARGET_LOSS},
-  {SECTION_NAME_TRAINING, KEY_NAME_BATCH_SIZE},
-  {SECTION_NAME_TRAINING, KEY_NAME_TRAINING_MODE},
-  {SECTION_NAME_DATA,     KEY_NAME_TRAINING_CATEGORIES}
-};
 
 /**
   Constructor for ConfigParser class.

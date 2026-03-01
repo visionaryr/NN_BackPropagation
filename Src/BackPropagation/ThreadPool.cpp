@@ -13,6 +13,7 @@ ThreadPool::ThreadPool (
   )
 {
   Stop = false;
+  TasksCount = 0;
 
   //
   // Creating worker threads
@@ -53,7 +54,7 @@ ThreadPool::ThreadPool (
           // Notify potentially waiting threads
           // that a task has been completed
           unique_lock<mutex> lock(QueueMutex);
-          if (Tasks.empty()) {
+          if (--TasksCount == 0) {
             AllTasksDoneCV.notify_all();
           }
         }
@@ -91,6 +92,7 @@ ThreadPool::Enqueue (
     unique_lock<std::mutex> lock(QueueMutex);
     Tasks.emplace(move(Task));
   }
+  TasksCount++;
   QueueStateCV.notify_one();
 }
 
@@ -114,7 +116,7 @@ ThreadPool::WaitForAllTasksDone(
   // We rely on the worker threads to keep notifying us when they take a task
   // until the queue is finally empty.
   AllTasksDoneCV.wait(lock, [this] {
-    return Tasks.empty();
+    return Tasks.empty() && TasksCount == 0;
   });
 
   // When tasks_.empty() is true, the function returns.

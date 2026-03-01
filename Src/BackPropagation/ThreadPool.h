@@ -14,6 +14,7 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <atomic>
 using namespace std;
 
 // Class that represents a simple thread pool
@@ -56,6 +57,11 @@ private:
 
   // Condition variable to signal threads that is waiting for the task queue being empty.
   condition_variable AllTasksDoneCV;
+
+  // Atomic number to indicate the count of all tasks.
+  // Including both pending tasks in the queue and tasks being processed by worker threads.
+  atomic<unsigned int> TasksCount;
+  
 
   // Flag to indicate whether the thread pool should stop
   // or not
